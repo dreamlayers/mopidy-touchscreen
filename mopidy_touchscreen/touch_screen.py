@@ -40,7 +40,8 @@ class TouchScreen(pykka.ThreadingActor, core.CoreListener):
                 config['touchscreen']['sdl_audiodriver'])
 
         os.environ["SDL_PATH_DSP"] = config['touchscreen']['sdl_path_dsp']
-        pygame.init()
+        #pygame.init()
+        pygame.font.init()
         #pygame.display.set_caption("Mopidy-Touchscreen")
         self.get_display_surface(self.screen_size)
         #pygame.mouse.set_visible(self.cursor)
