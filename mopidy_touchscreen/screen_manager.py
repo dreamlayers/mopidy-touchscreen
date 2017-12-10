@@ -15,6 +15,7 @@ import pygame
 from screens import BaseScreen, Keyboard, LibraryScreen, MainScreen, MenuScreen,\
     PlaylistScreen, SearchScreen, Tracklist
 
+import st2205
 
 logger = logging.getLogger(__name__)
 
@@ -29,6 +30,9 @@ menu_index = 5
 class ScreenManager():
 
     def __init__(self, size, core, cache, resolution_factor):
+        self.st = st2205.ST2205()
+        self.st.get_image()
+
         self.core = core
         self.cache = cache
         self.fonts = {}
@@ -156,6 +160,7 @@ class ScreenManager():
 
             if update_type == BaseScreen.update_all:
                 screen.blit(surface, (0, 0))
+                self.st.upload_rgba(surface.get_view('2').raw)
                 #pygame.display.flip()
             else:
                 for rect in rects:
