@@ -65,11 +65,14 @@ class TouchScreen(pykka.ThreadingActor, core.CoreListener):
 
     def get_display_surface(self, size):
         try:
+            self.screen = pygame.Surface(size)
+            '''
             if self.fullscreen:
                 self.screen = pygame.display.set_mode(
                     size, pygame.FULLSCREEN)
             else:
                 self.screen = pygame.display.set_mode(size, pygame.RESIZABLE)
+            '''
         except Exception:
             raise exceptions.FrontendError("Error on display init:\n"
                                            + traceback.format_exc())

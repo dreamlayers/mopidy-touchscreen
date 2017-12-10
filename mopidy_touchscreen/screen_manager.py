@@ -156,7 +156,7 @@ class ScreenManager():
 
             if update_type == BaseScreen.update_all:
                 screen.blit(surface, (0, 0))
-                pygame.display.flip()
+                #pygame.display.flip()
             else:
                 for rect in rects:
                     screen.blit(surface, rect, area=rect)

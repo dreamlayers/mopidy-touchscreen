@@ -9,11 +9,11 @@ class DynamicBackground:
     def __init__(self, size):
         self.image_loaded = False
         self.size = size
-        self.surface = pygame.Surface(self.size).convert()
+        self.surface = pygame.Surface(self.size) #.convert()
         self.surface.fill((145, 16, 16))
-        self.surface_image = pygame.Surface(self.size).convert()
+        self.surface_image = pygame.Surface(self.size) #.convert()
         self.surface_image.fill((145, 16, 16))
-        self.surface_image_last = pygame.Surface(self.size).convert()
+        self.surface_image_last = pygame.Surface(self.size) #.convert()
         self.update = True
         self.screen_change_percent = 100
 
