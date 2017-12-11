@@ -351,7 +351,7 @@ class MainScreen(BaseScreen):
             self.get_cover_folder() +
             self.get_image_file_name())
         image = pygame.transform.scale(image_original, (size, size))
-        image = image.convert()
+        #image = image.convert()
         self.image = image
         self.background.set_background_image(image_original)
 

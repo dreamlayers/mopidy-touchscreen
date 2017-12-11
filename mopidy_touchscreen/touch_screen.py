@@ -11,6 +11,9 @@ import pykka
 
 from .screen_manager import ScreenManager
 
+from .input import LIRCManager
+from .input import InputManager
+from .input import InputEvent
 
 logger = logging.getLogger(__name__)
 
@@ -64,6 +67,8 @@ class TouchScreen(pykka.ThreadingActor, core.CoreListener):
             pins['enter'] = config['touchscreen']['gpio_enter']
             self.gpio_manager = GPIOManager(pins)
 
+        self.lirc = LIRCManager()
+
     def get_display_surface(self, size):
         try:
             self.screen = pygame.Surface(size)
@@ -84,6 +89,21 @@ class TouchScreen(pykka.ThreadingActor, core.CoreListener):
         while self.running:
             clock.tick(12)
             self.screen_manager.update(self.screen)
+            evmap = {
+                        'KEY_2': InputManager.down,
+                        'KEY_8': InputManager.up,
+                        'KEY_4': InputManager.left,
+                        'KEY_6': InputManager.right,
+                        'KEY_5': InputManager.enter
+                    }
+
+            for key in self.lirc.get():
+                if key in evmap:
+                    self.screen_manager.event(InputEvent(InputManager.key,
+                                                         None, None, None,
+                                                         evmap[key],
+                                                         None, #self.last_key,
+                                                         longpress=False))
             '''
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:

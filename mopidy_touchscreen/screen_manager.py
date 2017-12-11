@@ -178,7 +178,7 @@ class ScreenManager():
             tl_track, time_position)
 
     def event(self, event):
-        event = self.input_manager.event(event)
+        #event = self.input_manager.event(event)
         if event is not None:
             if self.keyboard is not None:
                 self.keyboard.touch_event(event)
