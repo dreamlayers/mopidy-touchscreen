@@ -160,11 +160,32 @@ class ScreenManager():
 
             if update_type == BaseScreen.update_all:
                 screen.blit(surface, (0, 0))
-                self.st.upload_rgba(surface.get_view('2').raw)
+                self.st.update_rgba(surface.get_view('2').raw)
                 #pygame.display.flip()
             else:
-                # FIXME update rects instead of whole screen
-                self.st.upload_rgba(surface.get_view('2').raw)
+                # Multiple rects, which get merged into one large
+                # rectangle encompassing all of them
+                xs = self.size[0]
+                ys = self.size[1]
+                xe = 0
+                ye = 0
+                for i, rect in enumerate(rects):
+                    if rect[0] < xs:
+                        xs = rect[0]
+                    if rect[1] < ys:
+                        ys = rect[1]
+                    rectxe = rect[0] + rect[2] - 1
+                    if rectxe > xe:
+                        xe = rectxe
+                    rectye = rect[1] + rect[3] - 1
+                    if rectye > ye:
+                        ye = rectye
+                if xs <= xe and ys <= ye:
+                    self.st.update_rgba_part(surface.get_view('2').raw,
+                                             xs, ys, xe, ye)
+                else:
+                    print('WARNING: bad rect for partial update')
+                    self.st.update_rgba(surface.get_view('2').raw)
                 '''
                 for rect in rects:
                     screen.blit(surface, rect, area=rect)
