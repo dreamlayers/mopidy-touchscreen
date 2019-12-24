@@ -92,7 +92,6 @@ class MainScreen(BaseScreen):
             rects.append(object.rect_in_pos)
         if self.progress_show and self.has_to_update_progress :
             object = self.touch_text_manager.get_touch_object("time_progress")
-            print object.rect_in_pos
             rects.append(object.rect_in_pos)
 
     def update(self, screen, update_type, rects):
