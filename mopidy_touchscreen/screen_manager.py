@@ -163,9 +163,13 @@ class ScreenManager():
                 self.st.upload_rgba(surface.get_view('2').raw)
                 #pygame.display.flip()
             else:
+                # FIXME update rects instead of whole screen
+                self.st.upload_rgba(surface.get_view('2').raw)
+                '''
                 for rect in rects:
                     screen.blit(surface, rect, area=rect)
                     pygame.display.update(rects)
+'''
             self.last_surface = surface
 
     def track_started(self, track):
