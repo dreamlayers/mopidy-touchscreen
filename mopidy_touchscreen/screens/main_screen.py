@@ -352,7 +352,7 @@ class MainScreen(BaseScreen):
         image = pygame.transform.scale(image_original, (size, size))
         #image = image.convert()
         self.image = image
-        self.background.set_background_image(image_original)
+        #self.background.set_background_image(image_original)
 
     def touch_event(self, event):
         if event.type == InputManager.click:
