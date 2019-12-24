@@ -102,7 +102,8 @@ class TouchScreen(pykka.ThreadingActor, core.CoreListener):
                     self.screen_manager.event(InputEvent(InputManager.key,
                                                          None, None, None,
                                                          evmap[key],
-                                                         None, #self.last_key,
+                    # keyboard screen fails if if unicode isn't an int
+                                                         0,
                                                          longpress=False))
             '''
             for event in pygame.event.get():
