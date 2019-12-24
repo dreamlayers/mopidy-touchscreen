@@ -18,6 +18,7 @@ from .input import InputEvent
 logger = logging.getLogger(__name__)
 
 
+
 class TouchScreen(pykka.ThreadingActor, core.CoreListener):
     def __init__(self, config, core):
         super(TouchScreen, self).__init__()
@@ -67,7 +68,15 @@ class TouchScreen(pykka.ThreadingActor, core.CoreListener):
             pins['enter'] = config['touchscreen']['gpio_enter']
             self.gpio_manager = GPIOManager(pins)
 
-        self.lirc = LIRCManager()
+        self.lirc = LIRCManager(fname = config['touchscreen']['lirc_socket'],
+                                remote = config['touchscreen']['lirc_remote'])
+        self.lircmap = {
+            config['touchscreen']['lirc_up'] : InputManager.up,
+            config['touchscreen']['lirc_down'] : InputManager.down,
+            config['touchscreen']['lirc_left']: InputManager.left,
+            config['touchscreen']['lirc_right']: InputManager.right,
+            config['touchscreen']['lirc_enter']: InputManager.enter
+        }
 
     def get_display_surface(self, size):
         try:
@@ -89,22 +98,18 @@ class TouchScreen(pykka.ThreadingActor, core.CoreListener):
         while self.running:
             clock.tick(12)
             self.screen_manager.update(self.screen)
-            evmap = {
-                        'KEY_2': InputManager.down,
-                        'KEY_8': InputManager.up,
-                        'KEY_4': InputManager.left,
-                        'KEY_6': InputManager.right,
-                        'KEY_5': InputManager.enter
-                    }
 
-            for key in self.lirc.get():
-                if key in evmap:
+            lirc_keys = self.lirc.get()
+            for key in lirc_keys:
+                mappedkey = self.lircmap.get(key)
+                if mappedkey is not None:
                     self.screen_manager.event(InputEvent(InputManager.key,
                                                          None, None, None,
-                                                         evmap[key],
+                                                         mappedkey,
                     # keyboard screen fails if if unicode isn't an int
                                                          0,
                                                          longpress=False))
+
             '''
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:

@@ -39,6 +39,14 @@ class Extension(ext.Extension):
         schema['sdl_mousedev'] = config.String()
         schema['sdl_audiodriver'] = config.String()
         schema['sdl_path_dsp'] = config.String()
+        schema['lirc_socket'] = config.String()
+        schema['lirc_remote'] = config.String()
+        schema['lirc_up'] = config.String()
+        schema['lirc_down'] = config.String()
+        schema['lirc_left'] = config.String()
+        schema['lirc_right'] = config.String()
+        schema['lirc_enter'] = config.String()
+
         return schema
 
     def setup(self, registry):
