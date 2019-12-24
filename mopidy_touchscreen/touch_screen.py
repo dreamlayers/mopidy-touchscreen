@@ -2,6 +2,8 @@ import logging
 import os
 import traceback
 from threading import Thread
+from threading import Timer
+from threading import Lock
 
 from mopidy import core, exceptions
 
@@ -16,7 +18,6 @@ from .input import InputManager
 from .input import InputEvent
 
 logger = logging.getLogger(__name__)
-
 
 
 class TouchScreen(pykka.ThreadingActor, core.CoreListener):
@@ -78,6 +79,11 @@ class TouchScreen(pykka.ThreadingActor, core.CoreListener):
             config['touchscreen']['lirc_enter']: InputManager.enter
         }
 
+        self.timer = None
+        self.screen_sleeping = False
+        self.lcd_timeout = config['touchscreen']['lcd_timeout']
+        self.lcd_lock = Lock()
+
     def get_display_surface(self, size):
         try:
             self.screen = pygame.Surface(size)
@@ -91,24 +97,52 @@ class TouchScreen(pykka.ThreadingActor, core.CoreListener):
         except Exception:
             raise exceptions.FrontendError("Error on display init:\n"
                                            + traceback.format_exc())
+    def _timeout(self):
+        self.actor_ref.tell("timeout")
+
+    def _start_timer(self, time):
+        if self.timer:
+            self.timer.cancel()
+        if time > 0:
+            self.timer = Timer(time, self._timeout)
+            self.timer.start()
+
+    def on_receive(self, message):
+        if message == "timeout":
+            self.lcd_lock.acquire()
+            if not self.screen_sleeping:
+                self.screen_manager.sleep()
+                self.screen_sleeping = True
+            self.lcd_lock.release()
 
     def start_thread(self):
         clock = pygame.time.Clock()
         #pygame.event.set_blocked(pygame.MOUSEMOTION)
+        self._start_timer(self.lcd_timeout)
         while self.running:
             clock.tick(12)
-            self.screen_manager.update(self.screen)
+            self.lcd_lock.acquire()
+            if not self.screen_sleeping:
+                self.screen_manager.update(self.screen)
 
             lirc_keys = self.lirc.get()
+            got_keys = False
             for key in lirc_keys:
                 mappedkey = self.lircmap.get(key)
                 if mappedkey is not None:
-                    self.screen_manager.event(InputEvent(InputManager.key,
-                                                         None, None, None,
-                                                         mappedkey,
-                    # keyboard screen fails if if unicode isn't an int
-                                                         0,
-                                                         longpress=False))
+                    got_keys = True
+                    if self.screen_sleeping:
+                        self.screen_sleeping = False
+                    else:
+                        self.screen_manager.event(InputEvent(InputManager.key,
+                                                             None, None, None,
+                                                             mappedkey,
+                        # keyboard screen fails if if unicode isn't an int
+                                                             0,
+                                                             longpress=False))
+            if got_keys:
+                self._start_timer(self.lcd_timeout)
+            self.lcd_lock.release()
 
             '''
             for event in pygame.event.get():
@@ -120,6 +154,9 @@ class TouchScreen(pykka.ThreadingActor, core.CoreListener):
                 else:
                     self.screen_manager.event(event)
             '''
+        if self.timer:
+            self.timer.cancel()
+        self.screen_manager.close()
         pygame.quit()
 
     def on_start(self):

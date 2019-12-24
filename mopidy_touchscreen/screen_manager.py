@@ -56,6 +56,8 @@ class ScreenManager():
 
         self.last_surface = pygame.Surface(size)
 
+        self.sleeping = False
+
     def init_manager(self, size):
         self.size = size
         self.base_size = self.size[1] / self.resolution_factor
@@ -140,6 +142,10 @@ class ScreenManager():
                         return BaseScreen.no_update
 
     def update(self, screen):
+        if self.sleeping:
+            self.st.lcd_sleep(0)
+            self.update_type = BaseScreen.update_all
+
         update_type = self.get_update_type()
         if update_type != BaseScreen.no_update:
             rects = []
@@ -192,6 +198,10 @@ class ScreenManager():
                     pygame.display.update(rects)
 '''
             self.last_surface = surface
+
+        if self.sleeping:
+            self.st.backlight(1)
+            self.sleeping = False
 
     def track_started(self, track):
         self.track = track
@@ -313,3 +323,14 @@ class ScreenManager():
     def close_keyboard(self):
         self.keyboard = None
         self.update_type = BaseScreen.update_all
+
+    def sleep(self):
+        self.sleeping = True
+        self.st.backlight(0)
+        self.st.lcd_sleep(1)
+
+    def close(self):
+        # FIXME why does LCD hang if closed while sleeping?
+        self.st.lcd_sleep(0)
+        self.st.backlight(1)
+        self.st.close()
