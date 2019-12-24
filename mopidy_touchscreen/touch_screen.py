@@ -70,7 +70,8 @@ class TouchScreen(pykka.ThreadingActor, core.CoreListener):
             self.gpio_manager = GPIOManager(pins)
 
         self.lirc = LIRCManager(fname = config['touchscreen']['lirc_socket'],
-                                remote = config['touchscreen']['lirc_remote'])
+                                remote = config['touchscreen']['lirc_remote'],
+                                repeat = config['touchscreen']['lirc_repeat'])
         self.lircmap = {
             config['touchscreen']['lirc_up'] : InputManager.up,
             config['touchscreen']['lirc_down'] : InputManager.down,

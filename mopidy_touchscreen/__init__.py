@@ -46,6 +46,7 @@ class Extension(ext.Extension):
         schema['lirc_left'] = config.String()
         schema['lirc_right'] = config.String()
         schema['lirc_enter'] = config.String()
+        schema['lirc_repeat'] = config.Integer()
         schema['lcd_timeout'] = config.Integer()
 
         return schema
