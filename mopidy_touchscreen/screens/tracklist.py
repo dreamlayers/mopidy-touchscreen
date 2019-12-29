@@ -1,4 +1,4 @@
-from base_screen import BaseScreen
+from .base_screen import BaseScreen
 
 from .main_screen import MainScreen
 from ..graphic_utils import ListView
@@ -14,8 +14,9 @@ class Tracklist(BaseScreen):
         self.tracks = []
         self.tracks_strings = []
         self.update_list()
-        self.track_started(
-            self.manager.core.playback.current_tl_track.get())
+        track = self.manager.core.playback.get_current_tl_track().get()
+        if track is not None:
+            self.track_started(track)
 
     def should_update(self):
         return self.list_view.should_update()
@@ -32,7 +33,7 @@ class Tracklist(BaseScreen):
         self.update_list()
 
     def update_list(self):
-        self.tracks = self.manager.core.tracklist.tl_tracks.get()
+        self.tracks = self.manager.core.tracklist.get_tl_tracks().get()
         self.tracks_strings = []
         for tl_track in self.tracks:
             self.tracks_strings.append(
@@ -42,8 +43,8 @@ class Tracklist(BaseScreen):
     def touch_event(self, touch_event):
         pos = self.list_view.touch_event(touch_event)
         if pos is not None:
-            self.manager.core.playback.play(self.tracks[pos])
+            self.manager.core.playback.play(tlid = self.tracks[pos].tlid)
 
     def track_started(self, track):
         self.list_view.set_active(
-            [self.manager.core.tracklist.index(track).get()])
+            [self.manager.core.tracklist.index(tlid = track.tlid).get()])

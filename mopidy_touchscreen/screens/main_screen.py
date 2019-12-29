@@ -3,12 +3,12 @@ import json
 import logging
 import os
 import time
-import urllib
-import urllib2
+import urllib.request, urllib.parse, urllib.error
+import urllib.request, urllib.error, urllib.parse
 from threading import Thread
 
 
-from base_screen import BaseScreen
+from .base_screen import BaseScreen
 
 import mopidy.core
 
@@ -38,7 +38,7 @@ class MainScreen(BaseScreen):
         self.track_duration = "00:00"
         self.has_to_update_progress = False
         self.touch_text_manager = ScreenObjectsManager()
-        current_track = self.core.playback.current_track.get()
+        current_track = self.core.playback.get_current_track().get()
         if current_track is None:
             self.track_playback_ended(None, None)
         else:
@@ -50,13 +50,13 @@ class MainScreen(BaseScreen):
         self.top_bar.fill((0, 0, 0, 128))
 
         # Play/pause
-        button = TouchAndTextItem(self.fonts['icon'], u"\ue615 ",
+        button = TouchAndTextItem(self.fonts['icon'], "\ue615 ",
                                   (0, 0), None)
         self.touch_text_manager.set_touch_object("pause_play", button)
         x = button.get_right_pos()
 
         # Mute
-        button = TouchAndTextItem(self.fonts['icon'], u"\ue61f ",
+        button = TouchAndTextItem(self.fonts['icon'], "\ue61f ",
                                   (x, 0), None)
         self.touch_text_manager.set_touch_object("mute", button)
         x = button.get_right_pos()
@@ -66,7 +66,7 @@ class MainScreen(BaseScreen):
                                (self.size[0] - x, self.base_size),
                                100, True)
         self.touch_text_manager.set_touch_object("volume", progress)
-        progress.set_value(self.core.playback.volume.get())
+        progress.set_value(self.core.mixer.get_volume().get())
         self.progress_show = False
 
 
@@ -102,8 +102,8 @@ class MainScreen(BaseScreen):
             self.touch_text_manager.render(screen)
             if self.image is not None:
                 screen.blit(self.image, (
-                    self.base_size / 2, self.base_size +
-                    self.base_size / 2))
+                    self.base_size // 2, self.base_size +
+                    self.base_size // 2))
 
         if update_type == BaseScreen.update_partial \
                 and self.track is not None:
@@ -119,8 +119,8 @@ class MainScreen(BaseScreen):
 
     def update_progress(self):
         if self.progress_show:
-                track_pos_millis = self.core.playback.time_position.get()
-                new_track_pos = track_pos_millis / 1000
+                track_pos_millis = self.core.playback.get_time_position().get()
+                new_track_pos = track_pos_millis // 1000
 
                 if new_track_pos != self.current_track_pos:
                     progress = self.touch_text_manager.get_touch_object(
@@ -138,16 +138,16 @@ class MainScreen(BaseScreen):
         self.update_keys = []
         self.image = None
         x = self.size[1] - self.base_size * 2
-        width = self.size[0] - self.base_size / 2 - x
+        width = self.size[0] - self.base_size // 2 - x
 
         # Previous track button
-        button = TouchAndTextItem(self.fonts['icon'], u"\ue61c",
+        button = TouchAndTextItem(self.fonts['icon'], "\ue61c",
                                   (0, self.size[1] - self.base_size), None)
         self.touch_text_manager.set_touch_object("previous", button)
         size_1 = button.get_right_pos()
 
-        size_2 = self.fonts['icon'].size(u"\ue61d")[0]
-        button = TouchAndTextItem(self.fonts['icon'], u"\ue61d",
+        size_2 = self.fonts['icon'].size("\ue61d")[0]
+        button = TouchAndTextItem(self.fonts['icon'], "\ue61d",
                                   (self.size[0] - size_2,
                                    self.size[1] - self.base_size),
                                   None)
@@ -155,7 +155,7 @@ class MainScreen(BaseScreen):
 
         if track.length:
             self.track_duration = time.strftime('%M:%S', time.gmtime(
-                track.length / 1000))
+                track.length // 1000))
 
             # Progress
             progress = Progressbar(self.fonts['base'],
@@ -182,7 +182,7 @@ class MainScreen(BaseScreen):
         # Track name
         label = TextItem(self.fonts['base'],
                          MainScreen.get_track_name(track),
-                         (x, (self.size[1]-self.base_size*3)/2
+                         (x, (self.size[1]-self.base_size*3)//2
                           - self.base_size*0.5),
                          (width, -1))
         if not label.fit_horizontal:
@@ -193,7 +193,7 @@ class MainScreen(BaseScreen):
         label = TextItem(self.fonts['base'],
                          MainScreen.get_track_album_name
                          (track),
-                         (x, (self.size[1]-self.base_size*3)/2
+                         (x, (self.size[1]-self.base_size*3)//2
                           + self.base_size*0.5),
                          (width, -1))
         if not label.fit_horizontal:
@@ -203,7 +203,7 @@ class MainScreen(BaseScreen):
         # Artist
         label = TextItem(self.fonts['base'],
                          self.get_artist_string(),
-                         (x, (self.size[1]-self.base_size*3)/2
+                         (x, (self.size[1]-self.base_size*3)//2
                           + self.base_size*1.5),
                          (width, -1))
         if not label.fit_horizontal:
@@ -251,7 +251,7 @@ class MainScreen(BaseScreen):
         image_uris = self.core.library.get_images(
             {self.track.uri}).get()[self.track.uri]
         if len(image_uris) > 0:
-            urllib.urlretrieve(image_uris[0].uri,
+            urllib.request.urlretrieve(image_uris[0].uri,
                                self.get_cover_folder() +
                                self.get_image_file_name())
             self.load_image()
@@ -261,9 +261,9 @@ class MainScreen(BaseScreen):
     def download_image_last_fm(self, artist_index):
         if artist_index < len(self.artists):
             try:
-                safe_artist = urllib.quote_plus(
+                safe_artist = urllib.parse.quote_plus(
                     self.artists[artist_index].name)
-                safe_album = urllib.quote_plus(
+                safe_album = urllib.parse.quote_plus(
                     MainScreen.get_track_album_name(self.track))
                 url = "http://ws.audioscrobbler.com/2.0/?"
                 params = "method=album.getinfo&" + \
@@ -271,10 +271,10 @@ class MainScreen(BaseScreen):
                          + "artist=" \
                          + safe_artist + "&album=" + safe_album + \
                          "&format=json"
-                response = urllib2.urlopen(url + params)
+                response = urllib.request.urlopen(url + params)
                 data = json.load(response)
                 image = data['album']['image'][-1]['#text']
-                urllib.urlretrieve(image,
+                urllib.request.urlretrieve(image,
                                    self.get_cover_folder() +
                                    self.get_image_file_name())
                 self.load_image()
@@ -291,7 +291,7 @@ class MainScreen(BaseScreen):
             current = TextItem(self.fonts['base'],
                                MainScreen.get_track_name
                                (self.track),
-                               (self.base_size / 2,
+                               (self.base_size // 2,
                                 self.base_size * 2),
                                (width, -1))
             if not current.fit_horizontal:
@@ -301,7 +301,7 @@ class MainScreen(BaseScreen):
             current = TextItem(self.fonts['base'],
                                MainScreen.get_track_album_name
                                (self.track),
-                               (self.base_size / 2,
+                               (self.base_size // 2,
                                 self.base_size * 3),
                                (width, -1))
             if not current.fit_horizontal:
@@ -310,7 +310,7 @@ class MainScreen(BaseScreen):
 
             current = TextItem(self.fonts['base'],
                                self.get_artist_string(),
-                               (self.base_size / 2,
+                               (self.base_size // 2,
                                 self.base_size * 4),
                                (width, -1))
             if not current.fit_horizontal:
@@ -327,19 +327,19 @@ class MainScreen(BaseScreen):
         width = self.size[0] - self.base_size
 
         current = TextItem(self.fonts['base'], "",
-                           (self.base_size / 2,
+                           (self.base_size // 2,
                             self.base_size * 2),
                            (width, -1))
         self.touch_text_manager.set_object("track_name", current)
 
         current = TextItem(self.fonts['base'], "",
-                           (self.base_size / 2,
+                           (self.base_size // 2,
                             self.base_size * 3),
                            (width, -1))
         self.touch_text_manager.set_object("album_name", current)
 
         current = TextItem(self.fonts['base'], "",
-                           (self.base_size / 2,
+                           (self.base_size // 2,
                             self.base_size * 4),
                            (width, -1))
         self.touch_text_manager.set_object("artist_name", current)
@@ -364,16 +364,16 @@ class MainScreen(BaseScreen):
 
         elif event.type == InputManager.swipe:
             if event.direction == InputManager.left:
-                self.core.playback.next()
+                next(self.core.playback)
             elif event.direction == InputManager.right:
                 self.core.playback.previous()
             elif event.direction == InputManager.up:
-                volume = self.core.playback.volume.get() + 10
+                volume = self.core.mixer.get_volume().get() + 10
                 if volume > 100:
                     volume = 100
                 self.core.mixer.set_volume(volume)
             elif event.direction == InputManager.down:
-                volume = self.core.playback.volume.get() - 10
+                volume = self.core.mixer.get_volume().get() - 10
                 if volume < 0:
                     volume = 0
                 self.core.mixer.set_volume(volume)
@@ -410,18 +410,18 @@ class MainScreen(BaseScreen):
                 elif key == "previous":
                     self.core.playback.previous()
                 elif key == "next":
-                    self.core.playback.next()
+                    next(self.core.playback)
                 elif key == "volume":
                     self.change_volume(event)
                 elif key == "pause_play":
-                    if self.core.playback.state.get() == \
+                    if self.core.playback.get_state().get() == \
                             mopidy.core.PlaybackState.PLAYING:
                         self.core.playback.pause()
                     else:
                         self.core.playback.play()
                 elif key == "mute":
-                    mute = not self.core.playback.mute.get()
-                    self.core.playback.set_mute(mute)
+                    mute = not self.core.mixer.get_mute().get()
+                    self.core.mixer.set_mute(mute)
                     self.mute_changed(mute)
 
     def change_volume(self, event):
@@ -434,29 +434,29 @@ class MainScreen(BaseScreen):
     def playback_state_changed(self, old_state, new_state):
         if new_state == mopidy.core.PlaybackState.PLAYING:
             self.touch_text_manager.get_touch_object(
-                "pause_play").set_text(u"\ue616", False)
+                "pause_play").set_text("\ue616", False)
         else:
             self.touch_text_manager.get_touch_object(
-                "pause_play").set_text(u"\ue615", False)
+                "pause_play").set_text("\ue615", False)
 
     def volume_changed(self, volume):
-        if not self.core.playback.mute.get():
+        if not self.core.mixer.get_mute().get():
             if volume > 80:
                 self.touch_text_manager.get_touch_object(
                     "mute").set_text(
-                    u"\ue61f", False)
+                    "\ue61f", False)
             elif volume > 50:
                 self.touch_text_manager.get_touch_object(
                     "mute").set_text(
-                    u"\ue620", False)
+                    "\ue620", False)
             elif volume > 20:
                 self.touch_text_manager.get_touch_object(
                     "mute").set_text(
-                    u"\ue621", False)
+                    "\ue621", False)
             else:
                 self.touch_text_manager.get_touch_object(
                     "mute").set_text(
-                    u"\ue622", False)
+                    "\ue622", False)
         self.touch_text_manager.get_touch_object("volume").set_value(
             volume)
 
@@ -465,9 +465,9 @@ class MainScreen(BaseScreen):
             not mute)
         if mute:
             self.touch_text_manager.get_touch_object("mute").set_text(
-                u"\ue623", False)
+                "\ue623", False)
         else:
-            self.volume_changed(self.core.playback.volume.get())
+            self.volume_changed(self.core.mixer.get_volume().get())
 
     @staticmethod
     def get_track_name(track):

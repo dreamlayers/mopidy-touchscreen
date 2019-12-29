@@ -1,4 +1,4 @@
-from base_screen import BaseScreen
+from .base_screen import BaseScreen
 
 import mopidy.models
 
@@ -63,14 +63,13 @@ class LibraryScreen(BaseScreen):
 
     def play_uri(self, track_pos):
         self.manager.core.tracklist.clear()
-        tracks = []
+        uris = []
         for item in self.library:
             if item.type == mopidy.models.Ref.TRACK:
-                tracks.append(self.manager.core.library.lookup(
-                    item.uri).get()[0])
+                uris.append(item.uri)
             else:
                 track_pos -= 1
-        self.manager.core.tracklist.add(tracks)
+        self.manager.core.tracklist.add(uris = uris)
         self.manager.core.playback.play(
-            tl_track=self.manager.core.tracklist.tl_tracks.get()
+            tl_track=self.manager.core.tracklist.get_tl_tracks().get()
             [track_pos])

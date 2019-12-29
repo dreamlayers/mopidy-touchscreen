@@ -1,6 +1,6 @@
 import logging
 
-from screen_objects import ScreenObjectsManager, ScrollBar, \
+from .screen_objects import ScreenObjectsManager, ScrollBar, \
     TouchAndTextItem
 
 from ..input import InputManager
@@ -14,7 +14,7 @@ class ListView():
         self.pos = pos
         self.base_size = base_size
         self.screen_objects = ScreenObjectsManager()
-        self.max_rows = self.size[1] / font.size("TEXT SIZE")[1]
+        self.max_rows = self.size[1] // font.size("TEXT SIZE")[1]
         self.current_item = 0
         self.font = font
         self.list_size = 0

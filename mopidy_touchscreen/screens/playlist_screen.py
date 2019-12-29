@@ -1,4 +1,4 @@
-from base_screen import BaseScreen
+from .base_screen import BaseScreen
 
 from ..graphic_utils import ListView
 
@@ -30,7 +30,7 @@ class PlaylistScreen(BaseScreen):
         self.selected_playlist = None
         self.playlists_strings = []
         self.playlists = []
-        for playlist in self.manager.core.playlists.playlists.get():
+        for playlist in self.manager.core.playlists.as_list().get():
             self.playlists.append(playlist)
             self.playlists_strings.append(playlist.name)
         self.list_view.set_list(self.playlists_strings)
@@ -62,5 +62,5 @@ class PlaylistScreen(BaseScreen):
                         self.playlist_tracks)
                     self.manager.core.playback.play(
                         tl_track=self.manager.core.
-                        tracklist.tl_tracks.get()
+                        tracklist.get_tl_tracks().get()
                         [clicked-1])

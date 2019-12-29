@@ -1,7 +1,7 @@
 import os
 import socket
 
-from base_screen import BaseScreen
+from .base_screen import BaseScreen
 
 from ..graphic_utils import ListView
 
@@ -73,13 +73,13 @@ class MenuScreen(BaseScreen):
 
     def options_changed(self):
         active = []
-        if self.core.tracklist.random.get():
+        if self.core.tracklist.get_random().get():
             active.append(0)
-        if self.core.tracklist.repeat.get():
+        if self.core.tracklist.get_repeat().get():
             active.append(1)
-        if self.core.tracklist.single.get():
+        if self.core.tracklist.get_single().get():
             active.append(2)
-        if self.core.tracklist.consume.get():
+        if self.core.tracklist.get_consume().get():
             active.append(3)
         self.list.set_active(active)
 

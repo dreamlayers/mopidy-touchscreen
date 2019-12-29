@@ -15,7 +15,7 @@ class LIRCManager():
             return []
         res = []
         for l in s.splitlines():
-            ldata = l.split(' ')
+            ldata = l.decode().split(' ')
             repeat = int(ldata[1], 16)
             if (self.remote is None or ldata[3] == self.remote) and \
                (repeat == 0 or

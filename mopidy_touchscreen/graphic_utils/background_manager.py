@@ -53,7 +53,7 @@ class DynamicBackground:
             pos = (int((self.size[0] - image_size[0])/2),
                    (int(self.size[1] - image_size[1])/2))
             self.surface_image.blit(blur_surf_times(
-                target, self.size[0]/40, 10), pos)
+                target, self.size[0]//40, 10), pos)
             self.screen_change_percent = 0
             self.image_loaded = True
         self.update = True

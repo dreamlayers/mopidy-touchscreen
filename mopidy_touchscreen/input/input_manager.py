@@ -27,8 +27,8 @@ class InputManager():
         self.down_pos = (0, 0)
         self.up_pos = (0, 0)
         self.screen_size = size
-        self.max_move_margin = self.screen_size[1] / 6
-        self.min_swipe_move = self.screen_size[1] / 3
+        self.max_move_margin = self.screen_size[1] // 6
+        self.min_swipe_move = self.screen_size[1] // 3
         self.down_button = -1
         self.down_time = -1
         self.last_key = -1

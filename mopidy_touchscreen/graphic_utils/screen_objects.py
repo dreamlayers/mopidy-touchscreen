@@ -131,7 +131,7 @@ class TextItem(BaseItem):
         if self.center:
             if self.fit_horizontal:
                 self.margin = (self.size[0] -
-                               self.box.get_rect().width)/2
+                               self.box.get_rect().width)//2
 
     def update(self):
         if self.scroll_no_fit and not self.fit_horizontal:
@@ -208,7 +208,7 @@ class TouchObject(BaseItem):
         #    self.selected_box_rectangle.convert_alpha()
         pygame.draw.rect(self.selected_box_rectangle, (255, 255, 255),
                          self.selected_box_rectangle.get_rect(),
-                         size[1]/10+1)
+                         size[1]//10+1)
 
     def is_pos_inside(self, pos):
         return self.rect_in_pos.collidepoint(pos)
@@ -286,7 +286,7 @@ class Progressbar(TouchObject):
         #    .convert_alpha()
         pygame.draw.rect(self.rectangle, (255, 255, 255),
                          self.rectangle.get_rect(),
-                         size[1]/20+1)
+                         size[1]//20+1)
 
     def render(self, surface):
         surface.blit(self.surface, self.pos)
@@ -299,18 +299,18 @@ class Progressbar(TouchObject):
             if self.value_text:
                 self.set_text(str(self.value))
             self.surface.fill(self.back_color)
-            pos_pixel = value * self.size[0] / self.max
+            pos_pixel = value * self.size[0] // self.max
             rect = pygame.Rect(0, 0, pos_pixel, self.size[1])
             self.surface.fill(self.main_color, rect)
 
     def get_pos_value(self, pos):
         x = pos[0] - self.pos[0]
-        return x * self.max / self.size[0]
+        return x * self.max // self.size[0]
 
     def set_text(self, text):
         self.text.set_text(text, True)
-        self.text.pos = (self.pos[0] + self.size[0] / 2 - self.text.size[0] / 2,
-                         self.pos[1] + self.size[1]/2 - self.text.size[1]/2)
+        self.text.pos = (self.pos[0] + self.size[0] // 2 - self.text.size[0] // 2,
+                         self.pos[1] + self.size[1]//2 - self.text.size[1]//2)
 
 
 class ScrollBar(TouchObject):

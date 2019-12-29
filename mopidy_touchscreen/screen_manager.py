@@ -2,9 +2,9 @@ import logging
 import random
 import traceback
 
-from graphic_utils import DynamicBackground, \
+from .graphic_utils import DynamicBackground, \
     ScreenObjectsManager, TouchAndTextItem
-from input import InputManager
+from .input import InputManager
 
 import mopidy
 
@@ -12,8 +12,8 @@ from pkg_resources import Requirement, resource_filename
 
 import pygame
 
-from screens import BaseScreen, Keyboard, LibraryScreen, MainScreen, MenuScreen,\
-    PlaylistScreen, SearchScreen, Tracklist
+from .screens import BaseScreen, Keyboard, LibraryScreen, MainScreen,\
+                     MenuScreen, PlaylistScreen, SearchScreen, Tracklist
 
 import st2205
 
@@ -31,7 +31,6 @@ class ScreenManager():
 
     def __init__(self, size, core, cache, resolution_factor):
         self.st = st2205.ST2205()
-        self.st.get_image()
 
         self.core = core
         self.cache = cache
@@ -60,7 +59,7 @@ class ScreenManager():
 
     def init_manager(self, size):
         self.size = size
-        self.base_size = self.size[1] / self.resolution_factor
+        self.base_size = self.size[1] // self.resolution_factor
 
         self.background = DynamicBackground(self.size)
         font_icon = resource_filename(
@@ -77,7 +76,7 @@ class ScreenManager():
 
         # Menu buttons
 
-        button_size = (self.size[0] / 6, self.base_size)
+        button_size = (self.size[0] // 6, self.base_size)
 
         menu_icons = [u" \ue986", u" \ue600", u"\ue60d", u" \ue604", u" \ue605", u" \ue60a"]
 
@@ -115,8 +114,8 @@ class ScreenManager():
             traceback.print_exc()
 
         self.options_changed()
-        self.mute_changed(self.core.playback.mute.get())
-        playback_state = self.core.playback.state.get()
+        self.mute_changed(self.core.mixer.get_mute().get())
+        playback_state = self.core.playback.get_state().get()
         self.playback_state_changed(playback_state,
                                     playback_state)
         self.screens[menu_index].check_connection()
@@ -244,12 +243,12 @@ class ScreenManager():
                     elif event.unicode == "p":
                         self.core.playback.previous()
                     elif event.unicode == "+":
-                        volume = self.core.playback.volume.get() + 10
+                        volume = self.core.mixer.get_volume().get() + 10
                         if volume > 100:
                             volume = 100
                         self.core.mixer.set_volume(volume)
                     elif event.unicode == "-":
-                        volume = self.core.playback.volume.get() - 10
+                        volume = self.core.mixer.get_volume().get() - 10
                         if volume < 0:
                             volume = 0
                         self.core.mixer.set_volume(volume)

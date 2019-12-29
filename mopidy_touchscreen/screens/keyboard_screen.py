@@ -9,14 +9,14 @@ class Keyboard(BaseScreen):
 
     def __init__(self, size, base_size, manager, fonts, listener):
         BaseScreen.__init__(self, size, base_size, manager, fonts)
-        self.base_width = size[0]/10
-        self.base_height = size[1]/5
+        self.base_width = size[0]//10
+        self.base_height = size[1]//5
         self.listener = listener
         self.manager = manager
         self.selected_row = 0
         self.selected_col = 0
         self.selected_others = -1
-        self.font = pygame.font.SysFont("arial", size[1]/6)
+        self.font = pygame.font.SysFont("arial", size[1]//6)
         self.keyboards = [ScreenObjectsManager(), ScreenObjectsManager()]
         self.other_objects = ScreenObjectsManager()
         self.current_keyboard = 0

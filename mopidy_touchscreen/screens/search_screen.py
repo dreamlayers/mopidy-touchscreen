@@ -1,4 +1,4 @@
-from base_screen import BaseScreen
+from .base_screen import BaseScreen
 
 import pygame
 
@@ -38,7 +38,7 @@ class SearchScreen(BaseScreen):
         self.screen_objects.set_touch_object("query", text)
 
         # Mode buttons
-        button_size = ((self.size[0]-x)/3, self.base_size)
+        button_size = ((self.size[0]-x)//3, self.base_size)
         self.mode_objects_keys = ["mode_track", "mode_album",
                                   "mode_artist"]
 

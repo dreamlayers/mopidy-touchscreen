@@ -15,7 +15,7 @@ class GPIOManager():
         # Left Button
         GPIO.setup(pins['left'], GPIO.IN, pull_up_down=GPIO.PUD_UP)
         GPIO.add_event_detect(pins['left'], GPIO.BOTH, callback=left,
-                              bouncetime=30)
+                              ouncetime=30)
 
         # Right Button
         GPIO.setup(pins['right'], GPIO.IN, pull_up_down=GPIO.PUD_UP)
