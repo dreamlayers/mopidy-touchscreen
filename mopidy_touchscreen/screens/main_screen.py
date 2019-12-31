@@ -24,7 +24,7 @@ logger = logging.getLogger(__name__)
 
 class MainScreen(BaseScreen):
     def __init__(self, size, base_size, manager, fonts, cache, core,
-                 background):
+                 background, base_url):
         BaseScreen.__init__(self, size, base_size, manager, fonts)
         self.core = core
         self.track = None
@@ -33,6 +33,7 @@ class MainScreen(BaseScreen):
         self.artists = None
         self.update_next_frame = True
         self.background = background
+        self.base_url = base_url
         self.update_keys = []
         self.current_track_pos = 0
         self.track_duration = "00:00"
@@ -251,7 +252,10 @@ class MainScreen(BaseScreen):
         image_uris = self.core.library.get_images(
             {self.track.uri}).get()[self.track.uri]
         if len(image_uris) > 0:
-            urllib.request.urlretrieve(image_uris[0].uri,
+            uri = image_uris[0].uri
+            if uri.startswith('/'):
+                uri = self.base_url + uri
+            urllib.request.urlretrieve(uri,
                                self.get_cover_folder() +
                                self.get_image_file_name())
             self.load_image()

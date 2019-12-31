@@ -29,7 +29,7 @@ menu_index = 5
 
 class ScreenManager():
 
-    def __init__(self, size, core, cache, resolution_factor):
+    def __init__(self, size, core, cache, resolution_factor, base_url):
         self.st = st2205.ST2205()
 
         self.core = core
@@ -51,13 +51,13 @@ class ScreenManager():
 
         self.resolution_factor = resolution_factor
 
-        self.init_manager(size)
+        self.init_manager(size, base_url)
 
         self.last_surface = pygame.Surface(size)
 
         self.sleeping = False
 
-    def init_manager(self, size):
+    def init_manager(self, size, base_url):
         self.size = size
         self.base_size = self.size[1] // self.resolution_factor
 
@@ -104,7 +104,7 @@ class ScreenManager():
             self.screens = [
                 SearchScreen(screen_size, self.base_size, self, self.fonts),
                 MainScreen(screen_size, self.base_size, self, self.fonts,
-                           self.cache, self.core, self.background),
+                           self.cache, self.core, self.background, base_url),
                 Tracklist(screen_size, self.base_size, self, self.fonts),
                 LibraryScreen(screen_size, self.base_size, self, self.fonts),
                 PlaylistScreen(screen_size,
