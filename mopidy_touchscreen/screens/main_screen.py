@@ -250,8 +250,13 @@ class MainScreen(BaseScreen):
 
     def download_image(self):
         image_uris = self.core.library.get_images(
-            {self.track.uri}).get()[self.track.uri]
-        if len(image_uris) > 0:
+            [self.track.uri]).get().get(self.track.uri)
+        if (image_uris is None or len(image_uris) == 0) \
+           and self.track.album is not None \
+           and self.track.album.uri is not None:
+            image_uris = self.core.library.get_images(
+                [self.track.album.uri]).get().get(self.track.album.uri)
+        if image_uris is not None and len(image_uris) > 0:
             uri = image_uris[0].uri
             if uri.startswith('/'):
                 uri = self.base_url + uri
