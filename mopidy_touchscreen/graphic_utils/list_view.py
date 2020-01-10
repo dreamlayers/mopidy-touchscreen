@@ -123,9 +123,9 @@ class ListView():
                 self.set_selected(self.selected+1)
         elif touch_event.type == InputManager.swipe:
             if touch_event.direction == InputManager.up:
-                self.move_to(-1)
+                self.page_move(-1)
             elif touch_event.direction == InputManager.down:
-                self.move_to(1)
+                self.page_move(1)
 
     # Scroll to direction
     # direction == 1 will scroll down
@@ -149,6 +149,18 @@ class ListView():
                     "scrollbar").set_item(
                     self.current_item)
             self.set_active(self.active)
+
+    def page_move(self, direction):
+        last_current = self.current_item
+        self.move_to(direction)
+
+        if last_current == self.current_item:
+            if direction == -1:
+                self.set_selected(0)
+            elif direction == 1:
+                self.set_selected(self.list_size - 1)
+        else:
+            self.set_selected(self.selected + self.current_item - last_current)
 
     # Set active items
     def set_active(self, active):

@@ -75,11 +75,20 @@ class TouchScreen(pykka.ThreadingActor, core.CoreListener):
                                 remote = config['touchscreen']['lirc_remote'],
                                 repeat = config['touchscreen']['lirc_repeat'])
         self.lircmap = {
-            config['touchscreen']['lirc_up'] : InputManager.up,
-            config['touchscreen']['lirc_down'] : InputManager.down,
-            config['touchscreen']['lirc_left']: InputManager.left,
-            config['touchscreen']['lirc_right']: InputManager.right,
-            config['touchscreen']['lirc_enter']: InputManager.enter
+            config['touchscreen']['lirc_pageup'] :
+                (InputManager.swipe, InputManager.up),
+            config['touchscreen']['lirc_up'] :
+                (InputManager.key, InputManager.up),
+            config['touchscreen']['lirc_down'] :
+                (InputManager.key,  InputManager.down),
+            config['touchscreen']['lirc_pagedown'] :
+                (InputManager.swipe, InputManager.down),
+            config['touchscreen']['lirc_left'] :
+                (InputManager.key, InputManager.left),
+            config['touchscreen']['lirc_right'] :
+                (InputManager.key, InputManager.right),
+            config['touchscreen']['lirc_enter'] :
+                (InputManager.key, InputManager.enter)
         }
 
         self.timer = None
@@ -131,15 +140,16 @@ class TouchScreen(pykka.ThreadingActor, core.CoreListener):
             lirc_keys = self.lirc.get()
             got_keys = False
             for key in lirc_keys:
-                mappedkey = self.lircmap.get(key)
-                if mappedkey is not None:
+                lircdata = self.lircmap.get(key)
+                if lircdata is not None:
+                    (evtype, direction) = lircdata
                     got_keys = True
                     if self.screen_sleeping:
                         self.screen_sleeping = False
                     else:
-                        self.screen_manager.event(InputEvent(InputManager.key,
+                        self.screen_manager.event(InputEvent(evtype,
                                                              None, None, None,
-                                                             mappedkey,
+                                                             direction,
                         # keyboard screen fails if if unicode isn't an int
                                                              0,
                                                              longpress=False))
