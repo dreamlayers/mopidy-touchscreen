@@ -31,13 +31,13 @@ class PlaylistScreen(BaseScreen):
         self.playlists_strings = []
         self.playlists = []
         for playlist in self.manager.core.playlists.as_list().get():
-            self.playlists.append(playlist)
+            self.playlists.append(playlist.uri)
             self.playlists_strings.append(playlist.name)
         self.list_view.set_list(self.playlists_strings)
 
     def playlist_selected(self, playlist):
         self.selected_playlist = playlist
-        self.playlist_tracks = playlist.tracks
+        self.playlist_tracks = self.manager.core.playlists.get_items(playlist).get()
         self.playlist_tracks_strings = ["../"]
         for track in self.playlist_tracks:
             if track.name is None:
@@ -59,7 +59,8 @@ class PlaylistScreen(BaseScreen):
                 else:
                     self.manager.core.tracklist.clear()
                     self.manager.core.tracklist.add(
-                        self.playlist_tracks)
+                        uris = list(map(lambda x: x.uri,
+                                        self.playlist_tracks)))
                     self.manager.core.playback.play(
                         tl_track=self.manager.core.
                         tracklist.get_tl_tracks().get()
