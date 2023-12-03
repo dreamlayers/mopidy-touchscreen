@@ -202,6 +202,15 @@ class ScreenManager():
             self.st.backlight(1)
             self.sleeping = False
 
+    def show(self, buf):
+        if self.sleeping:
+            self.st.lcd_sleep(0)
+        self.update_type = BaseScreen.update_all
+        self.st.update_rgba(buf)
+        if self.sleeping:
+            self.st.backlight(1)
+            self.sleeping = False
+
     def track_started(self, track):
         self.track = track
         self.screens[main_screen_index].track_started(track.track)
@@ -324,9 +333,10 @@ class ScreenManager():
         self.update_type = BaseScreen.update_all
 
     def sleep(self):
-        self.sleeping = True
-        self.st.backlight(0)
-        self.st.lcd_sleep(1)
+        if not self.sleeping:
+            self.sleeping = True
+            self.st.backlight(0)
+            self.st.lcd_sleep(1)
 
     def close(self):
         # FIXME why does LCD hang if closed while sleeping?

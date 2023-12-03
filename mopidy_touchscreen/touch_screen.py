@@ -17,6 +17,8 @@ from .input import LIRCManager
 from .input import InputManager
 from .input import InputEvent
 
+from .socket_server import SocketServer
+
 logger = logging.getLogger(__name__)
 
 
@@ -92,9 +94,11 @@ class TouchScreen(pykka.ThreadingActor, core.CoreListener):
         }
 
         self.timer = None
-        self.screen_sleeping = False
+        self.screen_visible = True
         self.lcd_timeout = config['touchscreen']['lcd_timeout']
         self.lcd_lock = Lock()
+
+        self.socket_server = SocketServer(config['touchscreen']['lcd_socket'])
 
     def get_display_surface(self, size):
         try:
@@ -122,9 +126,8 @@ class TouchScreen(pykka.ThreadingActor, core.CoreListener):
     def on_receive(self, message):
         if message == "timeout":
             self.lcd_lock.acquire()
-            if not self.screen_sleeping:
-                self.screen_manager.sleep()
-                self.screen_sleeping = True
+            self.screen_manager.sleep()
+            self.screen_visible = False
             self.lcd_lock.release()
 
     def start_thread(self):
@@ -133,8 +136,12 @@ class TouchScreen(pykka.ThreadingActor, core.CoreListener):
         self._start_timer(self.lcd_timeout)
         while self.running:
             clock.tick(12)
+            imgbuf = self.socket_server.poll()
             self.lcd_lock.acquire()
-            if not self.screen_sleeping:
+            if imgbuf:
+                self.screen_visible = False
+                self.screen_manager.show(bytes(imgbuf))
+            elif self.screen_visible:
                 self.screen_manager.update(self.screen)
 
             lirc_keys = self.lirc.get()
@@ -144,8 +151,8 @@ class TouchScreen(pykka.ThreadingActor, core.CoreListener):
                 if lircdata is not None:
                     (evtype, direction) = lircdata
                     got_keys = True
-                    if self.screen_sleeping:
-                        self.screen_sleeping = False
+                    if not self.screen_visible:
+                        self.screen_visible = True
                     else:
                         self.screen_manager.event(InputEvent(evtype,
                                                              None, None, None,
@@ -153,7 +160,7 @@ class TouchScreen(pykka.ThreadingActor, core.CoreListener):
                         # keyboard screen fails if if unicode isn't an int
                                                              0,
                                                              longpress=False))
-            if got_keys:
+            if got_keys or imgbuf:
                 self._start_timer(self.lcd_timeout)
             self.lcd_lock.release()
 
