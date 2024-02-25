@@ -1,6 +1,7 @@
 from .base_screen import BaseScreen
 
 from ..graphic_utils import ListView
+from ..input import InputManager
 
 
 class PlaylistScreen(BaseScreen):
@@ -47,21 +48,35 @@ class PlaylistScreen(BaseScreen):
 
         self.list_view.set_list(self.playlist_tracks_strings)
 
+    def enqueue_list(self, items):
+        self.manager.core.tracklist.add(
+            uris = list(map(lambda x: x.uri, items)))
+
     def touch_event(self, touch_event):
-        clicked = self.list_view.touch_event(touch_event)
+        clicked = self.list_view.touch_event(touch_event,
+            (InputManager.enter, InputManager.enqueue))
         if clicked is not None:
+            enqueue = touch_event.type == InputManager.key and \
+                touch_event.direction == InputManager.enqueue
             if self.selected_playlist is None:
-                self.playlist_selected(self.playlists[clicked])
+                if enqueue:
+                    self.enqueue_list(
+                        self.manager.core.playlists.get_items(
+                            self.playlists[clicked]).get())
+                else:
+                    self.playlist_selected(self.playlists[clicked])
             else:
                 if clicked == 0:
                     self.selected_playlist = None
                     self.list_view.set_list(self.playlists_strings)
                 else:
-                    self.manager.core.tracklist.clear()
-                    self.manager.core.tracklist.add(
-                        uris = list(map(lambda x: x.uri,
-                                        self.playlist_tracks)))
-                    self.manager.core.playback.play(
-                        tl_track=self.manager.core.
-                        tracklist.get_tl_tracks().get()
-                        [clicked-1])
+                    if enqueue:
+                        self.manager.core.tracklist.add(
+                            uris = [self.playlist_tracks[clicked-1].uri])
+                    else:
+                        self.manager.core.tracklist.clear()
+                        self.enqueue_list(self.playlist_tracks)
+                        self.manager.core.playback.play(
+                            tl_track=self.manager.core.
+                            tracklist.get_tl_tracks().get()
+                            [clicked-1])
