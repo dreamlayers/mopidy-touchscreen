@@ -182,10 +182,13 @@ class TouchScreen(pykka.ThreadingActor, core.CoreListener):
                                                    new_state)
 
     def tracklist_changed(self):
+        # Changing tracklist while it is being displayed can cause problems
+        self.lcd_lock.acquire()
         try:
             self.screen_manager.tracklist_changed()
         except:
             traceback.print_exc()
+        self.lcd_lock.release()
 
     def track_playback_ended(self, tl_track, time_position):
         self.screen_manager.track_playback_ended(tl_track,
