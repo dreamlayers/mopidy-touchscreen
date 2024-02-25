@@ -4,6 +4,7 @@ import mopidy.models
 
 from ..graphic_utils import ListView
 from ..input import InputManager
+from .. import utils
 
 
 class LibraryScreen(BaseScreen):
@@ -79,8 +80,6 @@ class LibraryScreen(BaseScreen):
         for item in items:
             if item.type == mopidy.models.Ref.TRACK:
                 uris.append(item.uri)
-            else:
-                track_pos -= 1
         self.manager.core.tracklist.add(uris = uris)
 
     def enqueue_folder(self, uri):
@@ -89,6 +88,4 @@ class LibraryScreen(BaseScreen):
     def play_uri(self, track_pos):
         self.manager.core.tracklist.clear()
         self.enqueue_list(self.library)
-        self.manager.core.playback.play(
-            tl_track=self.manager.core.tracklist.get_tl_tracks().get()
-            [track_pos])
+        utils.play_track(self.manager.core, self.library, track_pos)

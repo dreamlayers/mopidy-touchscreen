@@ -2,6 +2,7 @@ from .base_screen import BaseScreen
 
 from ..graphic_utils import ListView
 from ..input import InputManager
+from .. import utils
 
 
 class PlaylistScreen(BaseScreen):
@@ -76,7 +77,5 @@ class PlaylistScreen(BaseScreen):
                     else:
                         self.manager.core.tracklist.clear()
                         self.enqueue_list(self.playlist_tracks)
-                        self.manager.core.playback.play(
-                            tl_track=self.manager.core.
-                            tracklist.get_tl_tracks().get()
-                            [clicked-1])
+                        utils.play_track(self.manager.core,
+                                         self.playlist_tracks, clicked-1)
