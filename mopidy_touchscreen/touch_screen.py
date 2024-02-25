@@ -73,25 +73,7 @@ class TouchScreen(pykka.ThreadingActor, core.CoreListener):
             pins['enter'] = config['touchscreen']['gpio_enter']
             self.gpio_manager = GPIOManager(pins)
 
-        self.lirc = LIRCManager(fname = config['touchscreen']['lirc_socket'],
-                                remote = config['touchscreen']['lirc_remote'],
-                                repeat = config['touchscreen']['lirc_repeat'])
-        self.lircmap = {
-            config['touchscreen']['lirc_pageup'] :
-                (InputManager.swipe, InputManager.up),
-            config['touchscreen']['lirc_up'] :
-                (InputManager.key, InputManager.up),
-            config['touchscreen']['lirc_down'] :
-                (InputManager.key,  InputManager.down),
-            config['touchscreen']['lirc_pagedown'] :
-                (InputManager.swipe, InputManager.down),
-            config['touchscreen']['lirc_left'] :
-                (InputManager.key, InputManager.left),
-            config['touchscreen']['lirc_right'] :
-                (InputManager.key, InputManager.right),
-            config['touchscreen']['lirc_enter'] :
-                (InputManager.key, InputManager.enter)
-        }
+        self.lirc = LIRCManager(config['touchscreen'])
 
         self.timer = None
         self.screen_visible = True
@@ -145,21 +127,17 @@ class TouchScreen(pykka.ThreadingActor, core.CoreListener):
                 self.screen_manager.update(self.screen)
 
             lirc_keys = self.lirc.get()
-            got_keys = False
-            for key in lirc_keys:
-                lircdata = self.lircmap.get(key)
-                if lircdata is not None:
-                    (evtype, direction) = lircdata
-                    got_keys = True
-                    if not self.screen_visible:
-                        self.screen_visible = True
-                    else:
-                        self.screen_manager.event(InputEvent(evtype,
-                                                             None, None, None,
-                                                             direction,
-                        # keyboard screen fails if if unicode isn't an int
-                                                             0,
-                                                             longpress=False))
+            got_keys = len(lirc_keys) > 0
+            for (evtype, direction) in lirc_keys:
+                if not self.screen_visible:
+                    self.screen_visible = True
+                else:
+                    self.screen_manager.event(InputEvent(evtype,
+                                                         None, None, None,
+                                                         direction,
+                    # keyboard screen fails if if unicode isn't an int
+                                                         0,
+                                                         longpress=False))
             if got_keys or imgbuf:
                 self._start_timer(self.lcd_timeout)
             self.lcd_lock.release()
