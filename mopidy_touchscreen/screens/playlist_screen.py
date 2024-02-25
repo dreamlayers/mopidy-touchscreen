@@ -55,19 +55,24 @@ class PlaylistScreen(BaseScreen):
 
     def touch_event(self, touch_event):
         clicked = self.list_view.touch_event(touch_event,
-            (InputManager.enter, InputManager.enqueue))
+            (InputManager.enter, InputManager.enqueue, InputManager.back))
         if clicked is not None:
-            enqueue = touch_event.type == InputManager.key and \
-                touch_event.direction == InputManager.enqueue
+            if touch_event.type == InputManager.key:
+                enqueue = touch_event.direction == InputManager.enqueue
+                back = touch_event.direction == InputManager.back
+            else:
+                enqueue = False
+                back = False
+
             if self.selected_playlist is None:
                 if enqueue:
                     self.enqueue_list(
                         self.manager.core.playlists.get_items(
                             self.playlists[clicked]).get())
-                else:
+                elif not back:
                     self.playlist_selected(self.playlists[clicked])
             else:
-                if clicked == 0:
+                if back or clicked == 0:
                     self.selected_playlist = None
                     self.list_view.set_list(self.playlists_strings)
                 else:

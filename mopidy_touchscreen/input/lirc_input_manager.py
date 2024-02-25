@@ -11,6 +11,7 @@ class LIRCManager():
         ('right', InputManager.key, InputManager.right),
         ('enter', InputManager.key, InputManager.enter),
         ('enqueue', InputManager.key, InputManager.enqueue),
+        ('back', InputManager.key, InputManager.back),
     }
 
     def _makedict(self, config):

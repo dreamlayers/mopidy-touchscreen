@@ -49,10 +49,11 @@ class LibraryScreen(BaseScreen):
 
     def touch_event(self, touch_event):
         clicked = self.list_view.touch_event(touch_event,
-            (InputManager.enter, InputManager.enqueue))
+            (InputManager.enter, InputManager.enqueue, InputManager.back))
         if clicked is not None:
             if self.current_directory is not None:
-                if clicked == 0:
+                if (touch_event.type == InputManager.key and
+                    touch_event.direction == InputManager.back) or clicked == 0:
                     self.go_up_directory()
                 else:
                     enqueue = touch_event.type == InputManager.key and \
@@ -69,7 +70,8 @@ class LibraryScreen(BaseScreen):
                         else:
                             self.go_inside_directory(
                                 self.library[clicked - 1].uri)
-            else:
+            elif touch_event.type != InputManager.key or \
+                 touch_event.direction == InputManager.enter:
                 self.go_inside_directory(self.library[clicked].uri)
 
     def enqueue_item(self, track_pos):

@@ -20,6 +20,7 @@ class InputManager():
     right = 3
     enter = 4
     enqueue = 5
+    back = 6
 
     special_keys = [pygame.K_DOWN, pygame.K_UP, pygame.K_LEFT,
                     pygame.K_RIGHT, pygame.K_RETURN]
