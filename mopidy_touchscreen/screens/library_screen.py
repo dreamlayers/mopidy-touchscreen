@@ -3,6 +3,7 @@ from .base_screen import BaseScreen
 import mopidy.models
 
 from ..graphic_utils import ListView
+from ..input import InputManager
 
 
 class LibraryScreen(BaseScreen):
@@ -46,7 +47,8 @@ class LibraryScreen(BaseScreen):
         self.list_view.render(screen, update_all, rects)
 
     def touch_event(self, touch_event):
-        clicked = self.list_view.touch_event(touch_event)
+        clicked = self.list_view.touch_event(touch_event,
+            (InputManager.enter, InputManager.enqueue))
         if clicked is not None:
             if self.current_directory is not None:
                 if clicked == 0:
@@ -54,15 +56,18 @@ class LibraryScreen(BaseScreen):
                 else:
                     if self.library[clicked - 1].type\
                             == mopidy.models.Ref.TRACK:
-                        self.play_uri(clicked-1)
+                        self.play_uri(clicked-1,
+                                      touch_event.type == InputManager.key and
+                                      touch_event.direction == InputManager.enqueue)
                     else:
                         self.go_inside_directory(
                             self.library[clicked - 1].uri)
             else:
                 self.go_inside_directory(self.library[clicked].uri)
 
-    def play_uri(self, track_pos):
-        self.manager.core.tracklist.clear()
+    def play_uri(self, track_pos, enqueue = False):
+        if not enqueue:
+            self.manager.core.tracklist.clear()
         uris = []
         for item in self.library:
             if item.type == mopidy.models.Ref.TRACK:
@@ -70,6 +75,7 @@ class LibraryScreen(BaseScreen):
             else:
                 track_pos -= 1
         self.manager.core.tracklist.add(uris = uris)
-        self.manager.core.playback.play(
-            tl_track=self.manager.core.tracklist.get_tl_tracks().get()
-            [track_pos])
+        if not enqueue:
+            self.manager.core.playback.play(
+                tl_track=self.manager.core.tracklist.get_tl_tracks().get()
+                [track_pos])

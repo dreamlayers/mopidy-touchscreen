@@ -96,7 +96,7 @@ class ListView():
                 object.update()
                 object.render(surface)
 
-    def touch_event(self, touch_event):
+    def touch_event(self, touch_event, accept_keys = (InputManager.enter,)):
         self.must_update = True
         if touch_event.type == InputManager.click \
                 or touch_event.type == InputManager.long_click:
@@ -114,7 +114,7 @@ class ListView():
                         return int(key)
         elif (touch_event.type == InputManager.key and
                 self.selected is not None):
-            if touch_event.direction == InputManager.enter:
+            if touch_event.direction in accept_keys:
                 if self.selected is not None:
                     return self.selected
             elif touch_event.direction == InputManager.up:

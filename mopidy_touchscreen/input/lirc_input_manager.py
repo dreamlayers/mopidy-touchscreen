@@ -9,13 +9,16 @@ class LIRCManager():
         ('pagedown', InputManager.swipe, InputManager.down),
         ('left', InputManager.key, InputManager.left),
         ('right', InputManager.key, InputManager.right),
-        ('enter', InputManager.key, InputManager.enter)
+        ('enter', InputManager.key, InputManager.enter),
+        ('enqueue', InputManager.key, InputManager.enqueue),
     }
 
     def _makedict(self, config):
         self.lircdict = {}
         for key in self.lircmap:
-            self.lircdict[config['lirc_' + key[0]]] = key[1:]
+            lirckey = config['lirc_' + key[0]]
+            if lirckey != 'none':
+                self.lircdict[lirckey] = key[1:]
 
     def __init__(self, config):
         fname = config['lirc_socket']
