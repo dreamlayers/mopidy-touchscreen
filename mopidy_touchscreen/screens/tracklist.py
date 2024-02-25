@@ -2,6 +2,7 @@ from .base_screen import BaseScreen
 
 from .main_screen import MainScreen
 from ..graphic_utils import ListView
+from ..input import InputManager
 
 
 class Tracklist(BaseScreen):
@@ -17,6 +18,8 @@ class Tracklist(BaseScreen):
         track = self.manager.core.playback.get_current_tl_track().get()
         if track is not None:
             self.track_started(track)
+        self.active = None
+        self.selected = None
 
     def should_update(self):
         return self.list_view.should_update()
@@ -31,6 +34,11 @@ class Tracklist(BaseScreen):
 
     def tracklist_changed(self):
         self.update_list()
+        if self.selected:
+            if self.active:
+                self.track_started(self.active)
+            self.list_view.set_selected(self.selected)
+            self.selected = None
 
     def update_list(self):
         self.tracks = self.manager.core.tracklist.get_tl_tracks().get()
@@ -41,10 +49,28 @@ class Tracklist(BaseScreen):
         self.list_view.set_list(self.tracks_strings)
 
     def touch_event(self, touch_event):
-        pos = self.list_view.touch_event(touch_event)
+        # Kludge to avoid events before the list has been updated after deletion
+        if self.selected:
+            return
+        pos = self.list_view.touch_event(touch_event,
+            (InputManager.enter, InputManager.enqueue))
         if pos is not None:
-            self.manager.core.playback.play(tlid = self.tracks[pos].tlid)
+            tlid = self.tracks[pos].tlid
+            if touch_event.type == InputManager.key and \
+               touch_event.direction == InputManager.enqueue:
+                if self.active and self.active.tlid == tlid:
+                    if pos < len(self.tracks) - 1:
+                        # TODO: Is there a race condition here,
+                        # if the next track already started?
+                        self.manager.core.playback.next()
+                    else:
+                        self.manager.core.playback.stop()
+                self.selected = min(pos, len(self.tracks) - 2)
+                self.manager.core.tracklist.remove({'tlid': [tlid]})
+            else:
+                self.manager.core.playback.play(tlid = tlid)
 
     def track_started(self, track):
+        self.active = track
         self.list_view.set_active(
             [self.manager.core.tracklist.index(tlid = track.tlid).get()])
