@@ -54,28 +54,41 @@ class LibraryScreen(BaseScreen):
                 if clicked == 0:
                     self.go_up_directory()
                 else:
+                    enqueue = touch_event.type == InputManager.key and \
+                              touch_event.direction == InputManager.enqueue
                     if self.library[clicked - 1].type\
                             == mopidy.models.Ref.TRACK:
-                        self.play_uri(clicked-1,
-                                      touch_event.type == InputManager.key and
-                                      touch_event.direction == InputManager.enqueue)
+                        if enqueue:
+                            self.enqueue_item(clicked-1)
+                        else:
+                            self.play_uri(clicked-1)
                     else:
-                        self.go_inside_directory(
-                            self.library[clicked - 1].uri)
+                        if enqueue:
+                            self.enqueue_folder(self.library[clicked - 1].uri)
+                        else:
+                            self.go_inside_directory(
+                                self.library[clicked - 1].uri)
             else:
                 self.go_inside_directory(self.library[clicked].uri)
 
-    def play_uri(self, track_pos, enqueue = False):
-        if not enqueue:
-            self.manager.core.tracklist.clear()
+    def enqueue_item(self, track_pos):
+        self.manager.core.tracklist.add(uris = [self.library[track_pos].uri])
+
+    def enqueue_list(self, items):
         uris = []
-        for item in self.library:
+        for item in items:
             if item.type == mopidy.models.Ref.TRACK:
                 uris.append(item.uri)
             else:
                 track_pos -= 1
         self.manager.core.tracklist.add(uris = uris)
-        if not enqueue:
-            self.manager.core.playback.play(
-                tl_track=self.manager.core.tracklist.get_tl_tracks().get()
-                [track_pos])
+
+    def enqueue_folder(self, uri):
+        self.enqueue_list(self.manager.core.library.browse(uri).get())
+
+    def play_uri(self, track_pos):
+        self.manager.core.tracklist.clear()
+        self.enqueue_list(self.library)
+        self.manager.core.playback.play(
+            tl_track=self.manager.core.tracklist.get_tl_tracks().get()
+            [track_pos])
