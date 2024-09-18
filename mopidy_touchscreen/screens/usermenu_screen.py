@@ -15,9 +15,19 @@ class UserMenuScreen(BaseScreen):
                              base_size, fonts['base'])
 
         conffile = os.path.join(config['core']['config_dir'], 'usermenu.conf')
-        print(conffile)
 
-        self.list_items = ["Test Random", "Test Repeat"]
+        self.list_items = []
+        self.commands = []
+
+        try:
+            with open(conffile, 'r') as f:
+                for l in f:
+                    sep = l.find('\t');
+                    self.list_items.append(l[0:sep])
+                    self.commands.append(l[sep+1:])
+        except:
+            self.list_items = [ 'Error Loading' ]
+            self.commands = [ '' ]
 
         self.list.set_list(self.list_items)
 
@@ -35,9 +45,4 @@ class UserMenuScreen(BaseScreen):
     def touch_event(self, event):
         clicked = self.list.touch_event(event)
         if clicked is not None:
-            if clicked == 0:
-                random = not self.core.tracklist.get_random().get()
-                self.core.tracklist.set_random(random)
-            elif clicked == 1:
-                repeat = not self.core.tracklist.get_repeat().get()
-                self.core.tracklist.set_repeat(repeat)
+            os.system(self.commands[clicked])
