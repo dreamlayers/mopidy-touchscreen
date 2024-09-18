@@ -13,7 +13,8 @@ from pkg_resources import Requirement, resource_filename
 import pygame
 
 from .screens import BaseScreen, Keyboard, LibraryScreen, MainScreen,\
-                     MenuScreen, PlaylistScreen, SearchScreen, Tracklist
+                     MenuScreen, PlaylistScreen, SearchScreen, Tracklist,\
+                     UserMenuScreen
 
 import st2205
 
@@ -76,13 +77,13 @@ class ScreenManager():
 
         # Menu buttons
 
-        button_size = (self.size[0] // 6, self.base_size)
+        menu_icons = [u" \ue986", u" \ue600", u"\ue60d", u" \ue604", u" \ue605", u" \ue60a", u" \ue60f"]
 
-        menu_icons = [u" \ue986", u" \ue600", u"\ue60d", u" \ue604", u" \ue605", u" \ue60a"]
+        button_size = (self.size[0] // len(menu_icons), self.base_size)
 
         x = 0
         i = 0
-        while(i<6):
+        while(i<len(menu_icons)):
 
             button = TouchAndTextItem(self.fonts['icon'], menu_icons[i],
                                     (x, self.size[1] - self.base_size),
@@ -109,7 +110,8 @@ class ScreenManager():
                 LibraryScreen(screen_size, self.base_size, self, self.fonts),
                 PlaylistScreen(screen_size,
                                self.base_size, self, self.fonts),
-                MenuScreen(screen_size, self.base_size, self, self.fonts, self.core)]
+                MenuScreen(screen_size, self.base_size, self, self.fonts, self.core),
+                UserMenuScreen(screen_size, self.base_size, self, self.fonts, self.core)]
         except:
             traceback.print_exc()
 
