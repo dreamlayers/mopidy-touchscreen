@@ -7,12 +7,15 @@ from ..graphic_utils import ListView
 
 
 class UserMenuScreen(BaseScreen):
-    def __init__(self, size, base_size, manager, fonts, core):
+    def __init__(self, size, base_size, manager, fonts, core, config):
         BaseScreen.__init__(self, size, base_size, manager, fonts)
         self.ip = None
         self.core = core
         self.list = ListView((0, 0), size,
                              base_size, fonts['base'])
+
+        conffile = os.path.join(config['core']['config_dir'], 'usermenu.conf')
+        print(conffile)
 
         self.list_items = ["Test Random", "Test Repeat"]
 

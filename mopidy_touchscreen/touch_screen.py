@@ -56,8 +56,7 @@ class TouchScreen(pykka.ThreadingActor, core.CoreListener):
                                             self.core,
                                             self.cache_dir,
                                             self.resolution_factor,
-                                            'http://localhost:' +
-                                            str(config['http']['port']))
+                                            config)
 
         # Raspberry pi GPIO
         self.gpio = config['touchscreen']['gpio']
