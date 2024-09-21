@@ -1,14 +1,44 @@
 import os
 import socket
 
-from .base_screen import BaseScreen
-
+from .folder_screen import FolderScreen
+from ..input import InputManager
 from ..graphic_utils import ListView
 
+class UserMenuScreen(FolderScreen):
+    @staticmethod
+    def load_config(filename):
+        last = [ ( [], [] ) ]
+        with open(filename, 'r') as f:
+            for l in f:
+                l = l.rstrip('\r\n')
+                llen = len(l)
+                l = l.lstrip('\t')
+                tlev = llen - len(l)
+                clev = len(last) - 1
+                if tlev == 0 and l == '':
+                    # Blank line ends one level, going back to parent level
+                    if len(last) > 1:
+                        last.pop()
+                elif tlev <= clev:
+                    # Adding item to current menu level
+                    sep = l.find('\t');
+                    if sep >= 0:
+                        last[-1][0].append(l[0:sep])
+                        last[-1][1].append(l[sep+1:])
+                    else:
+                        last[-1][0].append(l)
+                        last[-1][1].append(None)
+                elif tlev == clev + 1:
+                    # Start new inner level
+                    last[-1][0].append(l)
+                    newmenu = (['../'], [ ])
+                    last[-1][1].append(newmenu)
+                    last.append(newmenu)
 
-class UserMenuScreen(BaseScreen):
+        return last[0]
+
     def __init__(self, size, base_size, manager, fonts, core, config):
-        BaseScreen.__init__(self, size, base_size, manager, fonts)
         self.ip = None
         self.core = core
         self.list = ListView((0, 0), size,
@@ -20,29 +50,35 @@ class UserMenuScreen(BaseScreen):
         self.commands = []
 
         try:
-            with open(conffile, 'r') as f:
-                for l in f:
-                    sep = l.find('\t');
-                    self.list_items.append(l[0:sep])
-                    self.commands.append(l[sep+1:])
+            self.menu = UserMenuScreen.load_config(conffile)
         except:
-            self.list_items = [ 'Error Loading' ]
-            self.commands = [ '' ]
+            self.menu = ( [ 'Error Loading' ], [ None ] )
 
-        self.list.set_list(self.list_items)
+        FolderScreen.__init__(self, size, base_size, manager, fonts)
 
-    def should_update(self):
-        return self.list.should_update()
+    def browse_uri(self, uri):
+        if uri is None:
+            uri = self.menu
 
-    def find_update_rects(self, rects):
-        return self.list_view.find_update_rects(rects)
+        self.list_view.set_list(uri[0])
+        self.actions = uri[1]
 
-
-    def update(self, screen, update_type, rects):
-        update_all = (update_type == BaseScreen.update_all)
-        self.list.render(screen, update_all, rects)
-
-    def touch_event(self, event):
-        clicked = self.list.touch_event(event)
+    def touch_event(self, touch_event):
+        clicked = self.list_view.touch_event(touch_event,
+            (InputManager.enter, InputManager.enqueue, InputManager.back))
         if clicked is not None:
-            os.system(self.commands[clicked])
+            if self.current_directory is not None and \
+               ((touch_event.type == InputManager.key and
+                touch_event.direction == InputManager.back) or clicked == 0):
+                self.go_up_directory()
+            elif touch_event.type != InputManager.key or \
+                 touch_event.direction == InputManager.enter:
+                if self.current_directory is not None:
+                    action = self.actions[clicked-1]
+                else:
+                    action = self.actions[clicked]
+
+                if isinstance(action, str):
+                    os.system(action)
+                elif isinstance(action, tuple):
+                    self.go_inside_directory(action, clicked)
