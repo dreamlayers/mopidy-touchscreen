@@ -12,13 +12,15 @@ class LibraryScreen(BaseScreen):
         BaseScreen.__init__(self, size, base_size, manager, fonts)
         self.list_view = ListView((0, 0), self.size, self.base_size, self.fonts['base'])
         self.directory_list = []
+        self.position_list = []
         self.current_directory = None
         self.library = None
         self.library_strings = None
         self.browse_uri(None)
 
-    def go_inside_directory(self, uri):
+    def go_inside_directory(self, uri, position):
         self.directory_list.append(self.current_directory)
+        self.position_list.append(position)
         self.current_directory = uri
         self.browse_uri(uri)
 
@@ -36,6 +38,7 @@ class LibraryScreen(BaseScreen):
             directory = self.directory_list.pop()
             self.current_directory = directory
             self.browse_uri(directory)
+            self.list_view.set_selected(self.position_list.pop())
 
     def should_update(self):
         return self.list_view.should_update()
@@ -69,10 +72,10 @@ class LibraryScreen(BaseScreen):
                             self.enqueue_folder(self.library[clicked - 1].uri)
                         else:
                             self.go_inside_directory(
-                                self.library[clicked - 1].uri)
+                                self.library[clicked - 1].uri, clicked)
             elif touch_event.type != InputManager.key or \
                  touch_event.direction == InputManager.enter:
-                self.go_inside_directory(self.library[clicked].uri)
+                self.go_inside_directory(self.library[clicked].uri, clicked)
 
     def enqueue_item(self, track_pos):
         self.manager.core.tracklist.add(uris = [self.library[track_pos].uri])
