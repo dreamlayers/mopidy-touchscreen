@@ -38,21 +38,27 @@ class UserMenuScreen(FolderScreen):
 
         return last[0]
 
+    def reload(self, first = False):
+        try:
+            self.menu = UserMenuScreen.load_config(self.conffile)
+        except:
+            self.menu = ( [ 'Error Loading' ], [ None ] )
+
+        self.menu[0].append('Reload menu')
+        self.menu[1].append(self.reload)
+
+        if not first:
+            self.browse_uri(None)
+
     def __init__(self, size, base_size, manager, fonts, core, config):
         self.ip = None
         self.core = core
         self.list = ListView((0, 0), size,
                              base_size, fonts['base'])
 
-        conffile = os.path.join(config['core']['config_dir'], 'usermenu.conf')
-
-        self.list_items = []
-        self.commands = []
-
-        try:
-            self.menu = UserMenuScreen.load_config(conffile)
-        except:
-            self.menu = ( [ 'Error Loading' ], [ None ] )
+        self.conffile = os.path.join(config['core']['config_dir'],
+                                     'usermenu.conf')
+        self.reload(True)
 
         FolderScreen.__init__(self, size, base_size, manager, fonts)
 
@@ -82,3 +88,5 @@ class UserMenuScreen(FolderScreen):
                     os.system(action)
                 elif isinstance(action, tuple):
                     self.go_inside_directory(action, clicked)
+                elif callable(action):
+                    action()
