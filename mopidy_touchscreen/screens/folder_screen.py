@@ -8,13 +8,16 @@ from .. import utils
 
 
 class FolderScreen(BaseScreen):
-    def __init__(self, size, base_size, manager, fonts):
-        BaseScreen.__init__(self, size, base_size, manager, fonts)
-        self.list_view = ListView((0, 0), self.size, self.base_size, self.fonts['base'])
+    def browse_root(self):
         self.directory_list = []
         self.position_list = []
         self.current_directory = None
         self.browse_uri(None)
+
+    def __init__(self, size, base_size, manager, fonts):
+        BaseScreen.__init__(self, size, base_size, manager, fonts)
+        self.list_view = ListView((0, 0), self.size, self.base_size, self.fonts['base'])
+        self.browse_root()
 
     def go_inside_directory(self, uri, position):
         self.directory_list.append(self.current_directory)

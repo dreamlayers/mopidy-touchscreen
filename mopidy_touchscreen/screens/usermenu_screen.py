@@ -6,10 +6,22 @@ from ..input import InputManager
 from ..graphic_utils import ListView
 
 class UserMenuScreen(FolderScreen):
+    # https://docs.python.org/3/library/importlib.html#importing-a-source-file-directly
     @staticmethod
-    def load_config(filename):
+    def import_from_path(module_name, file_path):
+        import importlib.util
+        import sys
+        spec = importlib.util.spec_from_file_location(module_name, file_path)
+        module = importlib.util.module_from_spec(spec)
+        sys.modules[module_name] = module
+        spec.loader.exec_module(module)
+        return module
+
+    @staticmethod
+    def load_config(confdir):
         last = [ ( [], [] ) ]
-        with open(filename, 'r') as f:
+        helper = None
+        with open(os.path.join(confdir, 'usermenu.conf'), 'r') as f:
             for l in f:
                 l = l.rstrip('\r\n')
                 llen = len(l)
@@ -25,12 +37,31 @@ class UserMenuScreen(FolderScreen):
                     sep = l.find('\t');
                     if sep >= 0:
                         last[-1][0].append(l[0:sep])
-                        last[-1][1].append(l[sep+1:])
+                        action = l[sep+1:]
+                        if action.startswith('//'):
+                            if helper is None:
+                                try:
+                                    helper = UserMenuScreen.import_from_path(
+                                        'usermenu',
+                                        os.path.join(confdir, 'usermenu.py')
+                                    ).UserMenuHelper()
+                                except Exception as e:
+                                    print("Error loading UserMenuHelper:")
+                                    print(e)
+                                    helper = False
+                            if helper is not None and helper != False:
+                                try:
+                                    action = getattr(helper, action[2:])
+                                except Exception as e:
+                                    print('Error finding helper function ' +
+                                          action[2:] + ':')
+                                    print(e)
+                                    action = None
+                        last[-1][1].append(action)
                     else:
                         last[-1][0].append(l)
                         last[-1][1].append(None)
                 elif tlev == clev + 1:
-                    # Start new inner level
                     last[-1][0].append(l)
                     newmenu = (['../'], [ ])
                     last[-1][1].append(newmenu)
@@ -38,17 +69,18 @@ class UserMenuScreen(FolderScreen):
 
         return last[0]
 
-    def reload(self, first = False):
+    def reload(self):
         try:
-            self.menu = UserMenuScreen.load_config(self.conffile)
-        except:
+            self.menu = UserMenuScreen.load_config(self.confdir)
+        except Exception as e:
+            print("Error loading user menu:")
+            print(e)
             self.menu = ( [ 'Error Loading' ], [ None ] )
 
         self.menu[0].append('Reload menu')
         self.menu[1].append(self.reload)
 
-        if not first:
-            self.browse_uri(None)
+        return True
 
     def __init__(self, size, base_size, manager, fonts, core, config):
         self.ip = None
@@ -56,9 +88,8 @@ class UserMenuScreen(FolderScreen):
         self.list = ListView((0, 0), size,
                              base_size, fonts['base'])
 
-        self.conffile = os.path.join(config['core']['config_dir'],
-                                     'usermenu.conf')
-        self.reload(True)
+        self.confdir = config['core']['config_dir']
+        self.reload()
 
         FolderScreen.__init__(self, size, base_size, manager, fonts)
 
@@ -89,4 +120,8 @@ class UserMenuScreen(FolderScreen):
                 elif isinstance(action, tuple):
                     self.go_inside_directory(action, clicked)
                 elif callable(action):
-                    action()
+                    res = action()
+                    if isinstance(res, tuple):
+                        self.go_inside_directory(res, clicked)
+                    elif res:
+                        self.browse_root()
