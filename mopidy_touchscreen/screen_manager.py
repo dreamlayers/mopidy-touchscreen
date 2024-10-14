@@ -192,7 +192,6 @@ class ScreenManager():
                                              xs, ys, xe, ye)
                 else:
                     print('WARNING: bad rect for partial update')
-                    self.st.update_rgba(surface.get_view('2').raw)
                 '''
                 for rect in rects:
                     screen.blit(surface, rect, area=rect)
@@ -229,7 +228,9 @@ class ScreenManager():
                 self.keyboard.touch_event(event)
             elif not self.manage_event(event):
                 self.screens[self.current_screen].touch_event(event)
-            self.update_type = BaseScreen.update_all
+            if self.current_screen == search_index:
+                # Search screen doesn't do partial updates in response to events
+                self.update_type = BaseScreen.update_all
 
     def manage_event(self, event):
         if event.type == InputManager.click:

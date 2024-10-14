@@ -23,7 +23,7 @@ class MenuScreen(BaseScreen):
         return self.list.should_update()
 
     def find_update_rects(self, rects):
-        return self.list_view.find_update_rects(rects)
+        return self.list.find_update_rects(rects)
 
 
     def update(self, screen, update_type, rects):

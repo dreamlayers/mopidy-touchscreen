@@ -24,6 +24,9 @@ class ListView():
         self.active = []
         self.set_list([])
         self.update_keys = []
+        self.update_once = []
+        self.update_all = False
+        self.rect = self.pos + self.size
 
     # Sets the list for the lisview.
     # It should be an iterable of strings
@@ -51,6 +54,7 @@ class ListView():
     # Will load items currently displaying in item_pos
     def load_new_item_position(self, item_pos):
         self.update_keys = []
+        self.update_once = []
         self.current_item = item_pos
         if self.scrollbar:
             self.screen_objects.clear_touch(["scrollbar"])
@@ -62,7 +66,6 @@ class ListView():
             width = self.size[0] - self.base_size
         else:
             width = self.size[0]
-        self.should_update_always = False
         current_y = self.pos[1]
         while i < self.list_size and current_y <= self.pos[1] + self.size[1]:
             item = TouchAndTextItem(self.font, self.list[i], (
@@ -75,29 +78,40 @@ class ListView():
             i += 1
             z += 1
         self.reload_selected()
+        self.update_all = True
+
+    def add_update_once(self, key):
+        skey = str(key)
+        if skey not in self.update_keys:
+            self.update_once.append(skey)
 
     def should_update(self):
-        if len(self.update_keys) > 0:
+        if self.update_all or len(self.update_keys) > 0 or \
+           len(self.update_once) > 0:
             return True
         else:
             return False
 
     def find_update_rects(self, rects):
-        for key in self.update_keys:
-            object = self.screen_objects.get_touch_object(key)
-            rects.append(object.rect_in_pos)
+        if self.update_all:
+            rects.append(self.rect)
+        else:
+            for key in self.update_keys + self.update_once:
+                object = self.screen_objects.get_touch_object(key)
+                rects.append(object.rect_in_pos)
 
     def render(self, surface, update_all, rects):
-        if update_all:
+        if update_all or self.update_all:
             self.screen_objects.render(surface)
         else:
-            for key in self.update_keys:
+            for key in self.update_keys + self.update_once:
                 object = self.screen_objects.get_touch_object(key)
                 object.update()
                 object.render(surface)
+        self.update_once = []
+        self.update_all = False
 
     def touch_event(self, touch_event, accept_keys = (InputManager.enter,)):
-        self.must_update = True
         if touch_event.type == InputManager.click \
                 or touch_event.type == InputManager.long_click:
             objects = self.screen_objects.get_touch_objects_in_pos(
@@ -164,12 +178,12 @@ class ListView():
 
     # Set active items
     def set_active(self, active):
-        self.must_update = True
         for number in self.active:
             try:
                 self.screen_objects.get_touch_object(
                     str(number)).set_active(
                     False)
+                self.add_update_once(number)
             except KeyError:
                 pass
         for number in active:
@@ -177,18 +191,19 @@ class ListView():
                 self.screen_objects.get_touch_object(
                     str(number)).set_active(
                     True)
+                self.add_update_once(number)
             except KeyError:
                 pass
         self.active = active
 
     def set_selected(self, selected):
-        self.must_update = True
         if selected > -1 and selected < len(self.list):
             if self.selected is not None:
                 try:
                     self.screen_objects.get_touch_object(
                         str(self.selected)).set_selected(
                         False)
+                    self.add_update_once(self.selected)
                 except KeyError:
                     pass
             if selected is not None:
@@ -196,13 +211,13 @@ class ListView():
                     self.screen_objects.get_touch_object(
                         str(selected)).set_selected(
                         True)
+                    self.add_update_once(selected)
                 except KeyError:
                     pass
             self.selected = selected
             self.set_selected_on_screen()
 
     def set_selected_on_screen(self):
-        self.must_update = True
         if self.current_item + self.max_rows <= self.selected:
             self.move_to(1)
             self.set_selected_on_screen()
@@ -211,7 +226,6 @@ class ListView():
             self.set_selected_on_screen()
 
     def reload_selected(self):
-        self.must_update = True
         if self.selected is not None:
             try:
                 self.screen_objects.get_touch_object(
