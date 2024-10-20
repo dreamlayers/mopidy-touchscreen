@@ -116,3 +116,11 @@ def abbreviate(l):
                 ns += s[up[0]:].strip(' _-')
         nl.append(ns)
     return nl
+
+if __name__ == "__main__":
+    import os
+
+    for path, dirs, files in os.walk(sys.argv[1]):
+        print('DIR', path)
+        names = dirs + list(filter(lambda x: x.endswith('.mp3'), files))
+        print('\n'.join(abbreviate(names)))
