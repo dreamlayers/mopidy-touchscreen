@@ -12,10 +12,23 @@ def find_common_chars(l, tailcut = 0):
         return None
     c = list(l[0][0:cl])
     for s in l[1:]:
-        sl = len(s)
+        diffalpha = False
         for i in range(0, cl):
             if s[i] != c[i]:
                 # Mismatching locations become None
+                c[i] = None
+                diffalpha = s[i].isalpha()
+                if diffalpha:
+                    # Don't split words at the end
+                    for j in range(i-1,-1,-1):
+                        if c[j] is None:
+                            break
+                        elif s[j].isalpha():
+                            c[j] = None
+                        else:
+                            break
+            elif diffalpha and s[i].isalpha():
+                # Don't split words at the beginning
                 c[i] = None
     return c
 
