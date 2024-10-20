@@ -5,6 +5,7 @@ import mopidy.models
 from ..graphic_utils import ListView
 from ..input import InputManager
 from .. import utils
+from .. import abbreviate
 
 
 class LibraryScreen(FolderScreen):
@@ -18,8 +19,8 @@ class LibraryScreen(FolderScreen):
         if uri is not None:
             self.library_strings.append("../")
         self.library = self.manager.core.library.browse(uri).get()
-        for lib in self.library:
-            self.library_strings.append(lib.name)
+        names = list(map(lambda x: x.name, self.library))
+        self.library_strings += abbreviate.abbreviate(names)
         self.list_view.set_list(self.library_strings)
 
     def touch_event(self, touch_event):
