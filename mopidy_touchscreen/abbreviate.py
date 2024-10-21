@@ -7,6 +7,9 @@ dash = u"\u2013"
 def word_continuing_char(c):
     return c.isalpha() or c == "'"
 
+# Find which columns of characters match and can maybe be removed.
+# Returns array corresponding to character columns. None means don't remove.
+# Potential removal sites contain character that matches all list elements.
 def find_common_chars(l, tailcut = 0):
     if len(l) < 2:
         return None
@@ -37,6 +40,7 @@ def find_common_chars(l, tailcut = 0):
                 c[i] = None
     return c
 
+# Return length of longest common string at end of strings in list l
 def common_tail(l):
     if len(l) < 2:
         return 0
@@ -55,6 +59,8 @@ def common_tail(l):
                 break
     return cl
 
+# Return length of longest common string at end of strings in list l,
+# that may be removed without splitting words or making things look bad.
 def shortened_tail(l):
     if len(l) < 1:
         return 0
@@ -67,7 +73,8 @@ def shortened_tail(l):
             return i
     return 0
 
-
+# Return list of (start, length) potentially removable character spans,
+# using output of find_common_chars()
 def common_span_list(cl):
     if cl is None:
         return []
@@ -84,6 +91,9 @@ def common_span_list(cl):
                 s = None
     return csl
 
+# Return list of (start, end, 'text_after'), telling which parts of strings
+# from list l should be in abbreviated output. Common strings at end need
+# to be handled elsewhere.
 def useparts_list(l, tailcut = 0):
     cl = find_common_chars(l, tailcut)
     if cl is None:
@@ -113,6 +123,8 @@ def useparts_list(l, tailcut = 0):
     upl.append((p, -1, ''))
     return upl
 
+# Abbbreviate list of strings, using above functions.
+# This is the only function meant to be called externally.
 def abbreviate(l):
     l = list(map(lambda s: s.replace(' - ', dash).replace('_-_', dash), l))
 
