@@ -14,13 +14,28 @@ class LibraryScreen(FolderScreen):
         self.library_strings = None
         FolderScreen.__init__(self, size, base_size, manager, fonts)
 
+    def load_uri(self, uri):
+        dirlibs = []
+        dirnames = []
+        tracklibs = []
+        tracknames = []
+        lib = self.manager.core.library.browse(uri).get()
+        for l in lib:
+            if l.type == mopidy.models.Ref.TRACK:
+                tracklibs.append(l)
+                tracknames.append(l.name)
+            else:
+                dirlibs.append(l)
+                dirnames.append(l.name)
+        self.library = dirlibs + tracklibs
+        self.library_strings += abbreviate.abbreviate(dirnames)
+        self.library_strings += abbreviate.abbreviate(tracknames)
+
     def browse_uri(self, uri):
         self.library_strings = []
         if uri is not None:
             self.library_strings.append("../")
-        self.library = self.manager.core.library.browse(uri).get()
-        names = list(map(lambda x: x.name, self.library))
-        self.library_strings += abbreviate.abbreviate(names)
+        self.load_uri(uri)
         self.list_view.set_list(self.library_strings)
 
     def touch_event(self, touch_event):
