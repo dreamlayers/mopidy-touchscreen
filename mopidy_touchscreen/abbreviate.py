@@ -2,6 +2,11 @@ import sys
 
 dash = u"\u2013"
 
+# Some characters shouldn't be beside a removed common string,
+# because that would be removing part of a word.
+def word_continuing_char(c):
+    return c.isalpha() or c == "'"
+
 def find_common_chars(l, tailcut = 0):
     if len(l) < 2:
         return None
@@ -12,13 +17,13 @@ def find_common_chars(l, tailcut = 0):
         return None
     c = list(l[0][0:cl])
     for s in l[1:]:
-        diffalpha = False
+        wordcont = False
         for i in range(0, cl):
             if s[i] != c[i]:
                 # Mismatching locations become None
                 c[i] = None
-                diffalpha = s[i].isalpha()
-                if diffalpha:
+                wordcont = word_continuing_char(s[i])
+                if wordcont:
                     # Don't split words at the end
                     for j in range(i-1,-1,-1):
                         if c[j] is None:
@@ -27,7 +32,7 @@ def find_common_chars(l, tailcut = 0):
                             c[j] = None
                         else:
                             break
-            elif diffalpha and s[i].isalpha():
+            elif wordcont and word_continuing_char(s[i]):
                 # Don't split words at the beginning
                 c[i] = None
     return c
@@ -58,7 +63,7 @@ def shortened_tail(l):
     s = l[0]
     for i in range(ctl, 0, -1):
         c = s[-ctl]
-        if c != ']' and c != ')' and not c.isalpha():
+        if c not in "])'" and not c.isalpha():
             return i
     return 0
 
