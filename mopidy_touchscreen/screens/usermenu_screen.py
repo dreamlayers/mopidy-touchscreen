@@ -1,3 +1,4 @@
+import sys
 import os
 import socket
 
@@ -6,17 +7,6 @@ from ..input import InputManager
 from ..graphic_utils import ListView
 
 class UserMenuScreen(FolderScreen):
-    # https://docs.python.org/3/library/importlib.html#importing-a-source-file-directly
-    @staticmethod
-    def import_from_path(module_name, file_path):
-        import importlib.util
-        import sys
-        spec = importlib.util.spec_from_file_location(module_name, file_path)
-        module = importlib.util.module_from_spec(spec)
-        sys.modules[module_name] = module
-        spec.loader.exec_module(module)
-        return module
-
     @staticmethod
     def load_config(confdir):
         last = [ ( [], [] ) ]
@@ -41,10 +31,10 @@ class UserMenuScreen(FolderScreen):
                         if action.startswith('//'):
                             if helper is None:
                                 try:
-                                    helper = UserMenuScreen.import_from_path(
-                                        'usermenu',
-                                        os.path.join(confdir, 'usermenu.py')
-                                    ).UserMenuHelper()
+                                    if not confdir in sys.path:
+                                        sys.path.append(confdir)
+                                    import usermenu
+                                    helper = usermenu.UserMenuHelper()
                                 except Exception as e:
                                     print("Error loading UserMenuHelper:")
                                     print(e)
@@ -88,7 +78,7 @@ class UserMenuScreen(FolderScreen):
         self.list = ListView((0, 0), size,
                              base_size, fonts['base'])
 
-        self.confdir = config['core']['config_dir']
+        self.confdir = os.path.join(config['core']['config_dir'], 'usermenu')
         self.reload()
 
         FolderScreen.__init__(self, size, base_size, manager, fonts)
