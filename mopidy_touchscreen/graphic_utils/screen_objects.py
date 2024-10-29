@@ -1,5 +1,6 @@
 import logging
 import math
+from time import monotonic_ns
 
 import pygame
 
@@ -97,6 +98,7 @@ class TextItem(BaseItem):
         self.font = font
         self.text = text
         self.scroll_no_fit = scroll_no_fit
+        self.last_time = None
         self.color = (255, 255, 255)
         self.box = self.font.render(text, True, self.color)
         #self.box = self.box.convert_alpha()
@@ -133,9 +135,23 @@ class TextItem(BaseItem):
                 self.margin = (self.size[0] -
                                self.box.get_rect().width)//2
 
+    def timed_scroll(self):
+        if self.last_time == None:
+            self.last_time = monotonic_ns()
+            return TextItem.scroll_speed
+        else:
+            now = monotonic_ns()
+            delta = now - self.last_time
+            self.last_time = now
+            if delta < 0 or delta > 1000000000:
+                return TextItem.scroll_speed
+            else:
+                return round(TextItem.scroll_speed * delta / 50000000)
+
     def update(self):
         if self.scroll_no_fit and not self.fit_horizontal:
-            self.step += TextItem.scroll_speed
+            scroll_step = self.timed_scroll()
+            self.step += scroll_step
             if self.step_2 is None:
                 if (self.box.get_rect().width - self.step +
                         self.scroll_white_gap) < self.size[0]:
@@ -143,7 +159,7 @@ class TextItem(BaseItem):
                         self.box.get_rect().width - \
                         self.step + self.scroll_white_gap
             else:
-                self.step_2 -= TextItem.scroll_speed
+                self.step_2 -= scroll_step
                 if self.step_2 < 0:
                     self.step = 0 - self.step_2
                     self.step_2 = None
