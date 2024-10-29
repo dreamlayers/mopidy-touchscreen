@@ -8,9 +8,20 @@ from ..graphic_utils import ListView
 
 class UserMenuScreen(FolderScreen):
     @staticmethod
+    def submenu_error(strlist):
+        names = [ '../' ]
+        actions = []
+        for s in strlist:
+            print(s)
+            names.append(s)
+            actions.append(None)
+        return ( names, actions )
+
+    @staticmethod
     def load_config(confdir):
         last = [ ( [], [] ) ]
-        helper = None
+        importlib_started = False
+        modules = {}
         with open(os.path.join(confdir, 'usermenu.conf'), 'r') as f:
             for l in f:
                 l = l.rstrip('\r\n')
@@ -29,25 +40,46 @@ class UserMenuScreen(FolderScreen):
                         last[-1][0].append(l[0:sep])
                         action = l[sep+1:]
                         if action.startswith('//'):
-                            if helper is None:
-                                try:
-                                    if not confdir in sys.path:
-                                        sys.path.append(confdir)
-                                    import usermenu
-                                    helper = usermenu.UserMenuHelper()
-                                except Exception as e:
-                                    print("Error loading UserMenuHelper:")
-                                    print(e)
-                                    helper = False
-                            if helper is not None and helper != False:
-                                try:
-                                    action = getattr(helper, action[2:])
-                                except Exception as e:
-                                    print('Error finding helper function ' +
-                                          action[2:] + ':')
-                                    print(e)
-                                    action = None
-                        last[-1][1].append(action)
+                            if not importlib_started:
+                                import importlib
+                                if not confdir in sys.path:
+                                    sys.path.append(confdir)
+                                else:
+                                    importlib.invalidate_caches()
+                                importlib_started = True
+                            actparts = action[2:].split('/')
+                            try:
+                                modname = actparts[0]
+                                modinfo = modules.get(modname)
+                                if modinfo is None:
+                                    module = sys.modules.get(modname)
+                                    if module is None:
+                                        module = importlib.import_module(modname)
+                                    else:
+                                        module = importlib.reload(module)
+                                    modinfo = ( module, {} )
+                                    modules[modname] = modinfo
+
+                                if len(actparts) > 2:
+                                    classname = actparts[1]
+                                    obj = modinfo[1].get(classname)
+                                    if obj is None:
+                                        obj = getattr(modinfo[0], classname)()
+                                        modinfo[1][classname] = obj
+                                    funcname = actparts[2]
+                                else:
+                                    obj = modinfo[0]
+                                    funcname = actparts[1]
+
+                                last[-1][1].append(getattr(obj, funcname))
+                            except Exception as e:
+                                last[-1][1].append(UserMenuScreen.submenu_error((
+                                    'Error finding helper function ' +
+                                    action + ':', str(e)
+                                )))
+
+                        else:
+                            last[-1][1].append(action)
                     else:
                         last[-1][0].append(l)
                         last[-1][1].append(None)
@@ -110,7 +142,14 @@ class UserMenuScreen(FolderScreen):
                 elif isinstance(action, tuple):
                     self.go_inside_directory(action, clicked)
                 elif callable(action):
-                    res = action()
+                    try:
+                        res = action()
+                    except Exception as e:
+                        res = UserMenuScreen.submenu_error((
+                            "Error running helper function:",
+                            str(e)
+                        ))
+
                     if isinstance(res, tuple):
                         self.go_inside_directory(res, clicked)
                     elif res:
