@@ -6,7 +6,7 @@ from ..graphic_utils import ListView
 from ..input import InputManager
 from .. import utils
 from .. import abbreviate
-
+from ..input import InputEvent
 
 class LibraryScreen(FolderScreen):
     def __init__(self, size, base_size, manager, fonts):
@@ -61,6 +61,13 @@ class LibraryScreen(FolderScreen):
                         else:
                             self.go_inside_directory(
                                 self.library[clicked - 1].uri, clicked)
+
+                    if enqueue:
+                        self.list_view.touch_event(
+                            InputEvent(InputManager.key,
+                                       None, None, None,
+                                       InputManager.down))
+
             elif touch_event.type != InputManager.key or \
                  touch_event.direction == InputManager.enter:
                 self.go_inside_directory(self.library[clicked].uri, clicked)
